@@ -4,7 +4,7 @@
     Evaluatex.evaluate = function(expression, locals) {
         var l = new Evaluatex.Lexer(expression);
         var p = new Evaluatex.Parser(l.tokens());
-        var tree = p.orderExpression().simplify();
+        var tree = p.parse();
         return tree.evaluate(locals || {});
     };
 
@@ -229,6 +229,17 @@
                 }
             }
         }
+    };
+
+    Evaluatex.Parser.prototype.parse = function() {
+        var tree = this.orderExpression().simplify();
+
+        if (this.current() != undefined) {
+            throw "Expected end of input, but got " + this.current().type +
+            " " + this.current().value;
+        }
+
+        return tree;
     };
 
     Evaluatex.Parser.prototype.accept = function(token) {
