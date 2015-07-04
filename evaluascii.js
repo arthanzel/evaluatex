@@ -5,7 +5,7 @@
         var l = new Evaluatex.Lexer(expression);
         var p = new Evaluatex.Parser(l.tokens());
         var tree = p.orderExpression().simplify();
-        return tree.evaluate(locals);
+        return tree.evaluate(locals || {});
     };
 
     // Private Constants
@@ -32,44 +32,65 @@
         this.isUnary = function() { return UNARY_NODES.indexOf(this.type) >= 0;};
 
         this.evaluate = function(locals) {
+            var result = 0;
+
             switch (this.type) {
                 case "NUMBER":
-                    return this.value;
+                    result = this.value;
+                    break;
                 case "SYMBOL":
                     // Symbol exists in Math (e.g. PI or E)
                     if (Math[this.value]) {
-                        return Math[this.value];
+                        result = Math[this.value];
+                        break;
                     }
 
                     // Symbol must be defined in locals
                     if (locals[this.value] == null || !isFinite(locals[this.value])) {
                         throw "Symbol " + this.value + " is undefined or not a number."
                     }
-                    return locals[this.value];
+                    result = locals[this.value];
+                    break;
                 case "SUM":
-                    var result = 0;
+                    result = 0;
                     for (i in this.children) {
                         result += this.children[i].evaluate(locals);
                     }
-                    return result;
+                    break;
                 case "PRODUCT":
-                    var result = 1;
+                    result = 1;
                     for (i in this.children) {
                         result *= this.children[i].evaluate(locals);
                     }
-                    return result;
+                    break;
                 case "POWER":
                     result = Math.pow(this.children[0].evaluate(locals),
                                     this.children[1].evaluate(locals));
-                    return result;
+                    break;
                 case "FUNCTION":
-                    return Math[this.value](this.children[0].evaluate(locals));
+                    var evaluatedChildren = [];
+                    for (i in this.children) {
+                        evaluatedChildren.push(this.children[i].evaluate(locals));
+                    }
+
+                    result = Math[this.value].apply(this, evaluatedChildren);
+                    break;
                 case "NEGATE":
-                    return -this.children[0].evaluate(locals);
+                    result = -this.children[0].evaluate(locals);
+                    break;
                 case "INVERSE":
-                    return 1.0/this.children[0].evaluate(locals);
+                    result = 1.0/this.children[0].evaluate(locals);
+                    break;
+                default:
+                    throw "Node not recognized: " + this.type;
+                    break;
             }
-            return 0;
+
+            if (isNaN(result)) {
+                throw "Evaluation error: a term evaluated to NaN";
+            }
+
+            return result;
         };
 
         this.printTree = function(level) {
@@ -122,6 +143,7 @@
             COMMAND: /\\[\w\d]+/,
             SYMBOL: /[A-Za-z][A-Za-z0-9]*/,
             WS: /\s+/,
+            COMMA: /,/,
             POW: /\^/,
             PLUS: /\+/,
             MINUS: /\-/,
@@ -168,16 +190,43 @@
     // Parser
     // ======
     Evaluatex.Parser = function(tokens) {
-        this.tokens = tokens;
+        this.tokens = [];
         this.cursor = 0;
+
+        // Strip whitespace from token list
+        for (i in tokens) {
+            if (tokens[i].type != "WS") {
+                this.tokens.push(tokens[i]);
+            }
+        }
+
+        // Perform quick replacements
+        for (var i = 0; i < this.tokens.length - 1; i++) {
+            var current = this.tokens[i];
+            var next = this.tokens[i+1];
+
+            // Implicit multiplication
+            if (current.type == "NUMBER" && next.type == "SYMBOL") {
+                this.tokens.splice(i + 1, 0, new Token("TIMES"));
+                i++;
+            }
+            else if (current.type == "NUMBER" && next.type == "LPAREN") {
+                this.tokens.splice(i + 1, 0, new Token("TIMES"));
+                i++;
+            }
+            else if (current.type == "SYMBOL" && next.type == "SYMBOL") {
+                this.tokens.splice(i + 1, 0, new Token("TIMES"));
+                i++;
+            }
+            else if (current.type == "RPAREN" && next.type == "LPAREN") {
+                this.tokens.splice(i + 1, 0, new Token("TIMES"));
+                i++;
+            }
+        }
     };
 
     Evaluatex.Parser.prototype.accept = function(token) {
         if (!this.current()) return false;
-
-        while (this.current().type == "WS") {
-            this.cursor++;
-        }
 
         if (this.current().type == token) {
             this.cursor++;
@@ -188,7 +237,8 @@
 
     Evaluatex.Parser.prototype.expect = function(token) {
         if (!this.accept(token)) {
-            throw "Expected " + token + " but got " + this.current().value;
+            throw "Expected " + token + " but got " +
+                (this.current() ? this.current().value : "end of input.");
         }
     };
 
@@ -205,7 +255,23 @@
             // If the symbol is actually a function
             if (typeof Math[this.prev().value] == "function") {
                 var node = new Node("FUNCTION", this.prev().value);
-                node.add(this.val());
+
+                // Multi-param functions require parens and may have commas
+                if (this.accept("LPAREN")) {
+                    node.add(this.orderExpression());
+
+                    while (this.accept("COMMA")) {
+                        node.add(this.orderExpression());
+                    }
+
+                    this.expect("RPAREN");
+                }
+
+                // Single-parameter functions don't need parens
+                else {
+                    node.add(this.power());
+                }
+
                 return node;
             }
 
@@ -222,16 +288,13 @@
         else if (this.accept("NUMBER")) {
             return new Node("NUMBER", parseFloat(this.prev().value));
         }
-        else if (this.accept("FUNCTION")) {
-            
-        }
         else if (this.accept("LPAREN")) {
             var node = this.orderExpression();
             this.expect("RPAREN");
             return node;
         }
         else {
-            throw "Syntax Error at position " + this.current().value + " " + this.cursor;
+            throw "Syntax Error at "+ this.current().value + ", token " + this.cursor;
         }
     };
 
