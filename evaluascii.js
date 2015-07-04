@@ -1,6 +1,13 @@
 (function() {
     var Evaluatex = {};
 
+    Evaluatex.evaluate = function(expression, locals) {
+        var l = new Evaluatex.Lexer(expression);
+        var p = new Evaluatex.Parser(l.tokens());
+        var tree = p.orderExpression().simplify();
+        return tree.evaluate(locals);
+    };
+
     // Private Constants
     // =================
     var UNARY_NODES = ["FUNCTION", "NEGATE", "INVERSE"];
@@ -29,6 +36,15 @@
                 case "NUMBER":
                     return this.value;
                 case "SYMBOL":
+                    // Symbol exists in Math (e.g. PI or E)
+                    if (Math[this.value]) {
+                        return Math[this.value];
+                    }
+
+                    // Symbol must be defined in locals
+                    if (locals[this.value] == null || !isFinite(locals[this.value])) {
+                        throw "Symbol " + this.value + " is undefined or not a number."
+                    }
                     return locals[this.value];
                 case "SUM":
                     var result = 0;
@@ -104,8 +120,7 @@
         this.cursor = 0;
         this.tokenMap = {
             COMMAND: /\\[\w\d]+/,
-            FUNCTION: /sin|cos|tan/,
-            SYMBOL: /[A-Za-z]+/,
+            SYMBOL: /[A-Za-z][A-Za-z0-9]*/,
             WS: /\s+/,
             POW: /\^/,
             PLUS: /\+/,
@@ -173,7 +188,7 @@
 
     Evaluatex.Parser.prototype.expect = function(token) {
         if (!this.accept(token)) {
-            throw "Expected " + token + " but got " + this.current();
+            throw "Expected " + token + " but got " + this.current().value;
         }
     };
 
@@ -187,24 +202,31 @@
 
     Evaluatex.Parser.prototype.val = function() {
         if (this.accept("SYMBOL")) {
-            return new Node("SYMBOL", this.prev().value);
+            // If the symbol is actually a function
+            if (typeof Math[this.prev().value] == "function") {
+                var node = new Node("FUNCTION", this.prev().value);
+                node.add(this.val());
+                return node;
+            }
+
+            // If the symbol is a scalar
+            else {
+                return new Node("SYMBOL", this.prev().value);
+            }
         }
         else if (this.accept("MINUS")) {
             var node = new Node("NEGATE");
-            node.add(this.val());
+            node.add(this.power());
             return node;
         }
         else if (this.accept("NUMBER")) {
             return new Node("NUMBER", parseFloat(this.prev().value));
         }
         else if (this.accept("FUNCTION")) {
-            var node = new Node("FUNCTION", this.prev().value);
-            node.add(this.val());
-            return node;
+            
         }
         else if (this.accept("LPAREN")) {
-            var node = new Node("EXPR");
-            node.add(this.orderExpression());
+            var node = this.orderExpression();
             this.expect("RPAREN");
             return node;
         }
@@ -262,10 +284,6 @@
             node.add(this.power());
         }
         return node;
-    };
-
-    Evaluatex.evaluate = function(tree, locals) {
-
     };
 
     module.exports = Evaluatex;
