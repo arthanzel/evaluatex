@@ -39,13 +39,6 @@
                     result = this.value;
                     break;
                 case "SYMBOL":
-                    // Symbol exists in Math (e.g. PI or E)
-                    if (Math[this.value]) {
-                        result = Math[this.value];
-                        break;
-                    }
-
-                    // Symbol must be defined in locals
                     if (locals[this.value] == null || !isFinite(locals[this.value])) {
                         throw "Symbol " + this.value + " is undefined or not a number."
                     }
@@ -73,7 +66,7 @@
                         evaluatedChildren.push(this.children[i].evaluate(locals));
                     }
 
-                    result = Math[this.value].apply(this, evaluatedChildren);
+                    result = this.value.apply(this, evaluatedChildren);
                     break;
                 case "NEGATE":
                     result = -this.children[0].evaluate(locals);
@@ -200,12 +193,11 @@
             }
         }
 
-        // Perform quick replacements
+        // Add TIMES tokens in implicit multiplication
         for (var i = 0; i < this.tokens.length - 1; i++) {
             var current = this.tokens[i];
             var next = this.tokens[i+1];
 
-            // Implicit multiplication
             if (current.type == "NUMBER" && next.type == "SYMBOL") {
                 this.tokens.splice(i + 1, 0, new Token("TIMES"));
                 i++;
@@ -221,6 +213,20 @@
             else if (current.type == "RPAREN" && next.type == "LPAREN") {
                 this.tokens.splice(i + 1, 0, new Token("TIMES"));
                 i++;
+            }
+        }
+
+        // Replace SYMBOL tokens with NUMBER or FUNCTION tokens
+        for (i in this.tokens) {
+            var current = this.tokens[i];
+            if (current.type == "SYMBOL") {
+                if (isFinite(Math[current.value])) {
+                    this.tokens[i] = new Token("NUMBER", Math[current.value]);
+                }
+                else if (typeof Math[current.value] == "function") {
+                    // The token's value will be the function object.
+                    this.tokens[i] = new Token("FUNCTION", Math[current.value]);
+                }
             }
         }
     };
@@ -252,33 +258,28 @@
 
     Evaluatex.Parser.prototype.val = function() {
         if (this.accept("SYMBOL")) {
-            // If the symbol is actually a function
-            if (typeof Math[this.prev().value] == "function") {
-                var node = new Node("FUNCTION", this.prev().value);
+            return new Node("SYMBOL", this.prev().value);
+        }
+        else if (this.accept("FUNCTION")) {
+            var node = new Node("FUNCTION", this.prev().value);
 
-                // Multi-param functions require parens and may have commas
-                if (this.accept("LPAREN")) {
+            // Multi-param functions require parens and may have commas
+            if (this.accept("LPAREN")) {
+                node.add(this.orderExpression());
+
+                while (this.accept("COMMA")) {
                     node.add(this.orderExpression());
-
-                    while (this.accept("COMMA")) {
-                        node.add(this.orderExpression());
-                    }
-
-                    this.expect("RPAREN");
                 }
 
-                // Single-parameter functions don't need parens
-                else {
-                    node.add(this.power());
-                }
-
-                return node;
+                this.expect("RPAREN");
             }
 
-            // If the symbol is a scalar
+            // Single-parameter functions don't need parens
             else {
-                return new Node("SYMBOL", this.prev().value);
+                node.add(this.power());
             }
+
+            return node;
         }
         else if (this.accept("MINUS")) {
             var node = new Node("NEGATE");
