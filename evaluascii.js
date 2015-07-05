@@ -266,9 +266,7 @@
             var next = this.tokens[i+1];
 
             if (current.type == "TNUMBER" && next.type == "TSYMBOL") {
-                this.tokens.splice(i + 2, 0, new Token("TRPAREN"));
                 this.tokens.splice(i + 1, 0, new Token("TTIMES"));
-                this.tokens.splice(i, 0, new Token("TLPAREN"));
                 i++;
             }
             else if (current.type == "TSYMBOL" && next.type == "TSYMBOL") {

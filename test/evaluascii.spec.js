@@ -8,7 +8,6 @@ var formulae = [
     ["3 * x", 12, { x: 4 }],
     ["- 2 ^ 4", -16],
     ["2 * 4 + 1 / 4 - 3 / -2^2 * -cos(PI)", 9],
-    ["cos 2 PI", 1],
     ["sin(PI / 2)", 1],
     ["sqrt(LN2 + x)", Math.sqrt(Math.LN2 + 5), { x: 5 }],
     ["hypot 10", 10],

@@ -66,9 +66,17 @@ Implicit multiplication with parens or variables is not a problem.
 You have full access to Javascript's `Math` object, including all functions and constants.
 
 ```javascript
-> Evaluascii.evaluate("sin 0.5PI + magic", { magic: 3 })
+> Evaluascii.evaluate("sin(0.5PI) + magic", { magic: 3 })
 4
 ```
+
+You can omit parens from simple functions, but be careful with implicit multiplication.
+```javascript
+> Evaluascii.evaluate("sin 2PI") // Interpreted as sin(2) * PI
+2.8566
+```
+
+This will hopefully be improved at some point.
 
 You can even define custom functions. More support for this is coming soon.
 
