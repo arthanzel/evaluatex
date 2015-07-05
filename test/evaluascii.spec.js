@@ -1,7 +1,7 @@
 var assert = require("chai").assert;
 require("./helpers/aboutEqual");
 
-var Evaluatex = require("../evaluascii.js");
+var Evaluascii = require("../evaluascii.js");
 
 var formulae = [
     ["2", 2],
@@ -18,7 +18,7 @@ var formulae = [
     ["(-b + sqrt(b^2 - 4a * c)) / (2 a)", 3, { a: 2, b : -4, c: -6 }],
 
     // Test implicit multiplication
-    ["2a + 2 a + (2)(a a)", 30, { a: 3 }]
+    ["-2a + - 2 a + (2)(a a)", 6, { a: 3 }]
 ];
 
 describe("Evaluascii.js", function() {
@@ -31,7 +31,7 @@ describe("Evaluascii.js", function() {
 
             // console.log(expression); // For debugging
 
-            assert.aboutEqual(Evaluatex.evaluate(expression, locals), result);
+            assert.aboutEqual(Evaluascii.evaluate(expression, locals), result);
         }
     });
 });
