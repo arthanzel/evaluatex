@@ -27,7 +27,10 @@ var formulae = [
     ["incr 2 + incr(3)", 7, { incr: function(a) { return a + 1; } }],
 
     // Test factorial -40320
-    ["-(2^3)!", -40320]
+    ["-(2^3)!", -40320],
+
+    // Test parens
+    ["{1 + [2 - {3 + 4}])", -4]
 ];
 
 describe("Evaluascii.js", function() {

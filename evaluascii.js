@@ -33,8 +33,8 @@
         TMINUS: /\-/,
         TTIMES: /\*/,
         TDIVIDE: /\//,
-        TLPAREN: /\(/,
-        TRPAREN: /\)/,
+        TLPAREN: /[\(\[\{]/,
+        TRPAREN: /[\)\]\}]/,
         TNUMBER: /\d+(\.\d+)?/
     };
     
