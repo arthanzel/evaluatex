@@ -280,9 +280,7 @@
             if (current.type == "TSYMBOL") {
                 // If the symbol is a Math constant
                 if (isFinite(Math[current.value])) {
-                    this.tokens[i] = new Token
-
-                    ("TNUMBER", Math[current.value]);
+                    this.tokens[i] = new Token("TNUMBER", Math[current.value]);
                 }
 
                 // If the symbol is a Math function

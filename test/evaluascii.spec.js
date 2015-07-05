@@ -19,6 +19,7 @@ var formulae = [
 
     // Test implicit multiplication
     ["-2a + - 2 a + (2)(a a)", 6, { a: 3 }],
+    ["4a(1+b)", 60, { a: 3, b: 4 }],
 
     // Test absolute value
     ["2 + -|6 - 2^4| * 9", -88],
@@ -31,7 +32,10 @@ var formulae = [
     ["4.5!", 5*4*3*2],
 
     // Test parens
-    ["{1 + [2 - {3 + 4}])", -4]
+    ["{1 + [2 - {3 + 4}])", -4],
+
+    // Test convenience functions
+    ["logn(81, 3)", 4]
 ];
 
 describe("Evaluascii.js", function() {
