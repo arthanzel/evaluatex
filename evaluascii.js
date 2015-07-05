@@ -1,3 +1,6 @@
+//TODO: Option to disable custom JS functions.
+//TODO: Embedding functions written in AsciiMath.
+
 (function() {
     var Evaluascii = {};
 
@@ -5,6 +8,13 @@
     // It takes a math expression and a list of variables to which the expression refers.
     // This function automatically creates and invokes the lexer, parser, and evaluator.
     Evaluascii.evaluate = function(expression, locals) {
+        locals = locals || {};
+
+        // Extend the locals object with convenience functions:
+        locals.logn = function(x, n) {
+            return Math.log(x) / Math.log(n);
+        };
+
         var l = new Evaluascii.Lexer(expression);
         var p = new Evaluascii.Parser(l.tokens(), locals);
         var tree = p.parse();
@@ -257,15 +267,7 @@
                 this.tokens.splice(i + 1, 0, new Token("TTIMES"));
                 i++;
             }
-            else if (current.type == "TNUMBER" && next.type == "TLPAREN") {
-                this.tokens.splice(i + 1, 0, new Token("TTIMES"));
-                i++;
-            }
             else if (current.type == "TSYMBOL" && next.type == "TSYMBOL") {
-                this.tokens.splice(i + 1, 0, new Token("TTIMES"));
-                i++;
-            }
-            else if (current.type == "TRPAREN" && next.type == "TLPAREN") {
                 this.tokens.splice(i + 1, 0, new Token("TTIMES"));
                 i++;
             }
@@ -395,6 +397,10 @@
             if (this.accept("TTIMES")) {
                 node.add(this.power());
             }
+            else if (this.accept("TLPAREN")) {
+                node.add(this.orderExpression());
+                this.expect("TRPAREN");
+            }
             else if (this.accept("TDIVIDE")) {
                 // To avoid implementing a special rule for quotients, every
                 // term to be divided is simply wrapped in a node that takes
@@ -429,6 +435,10 @@
 
         if (this.accept("TSYMBOL")) {
             node = new Node("SYMBOL", this.prev().value);
+
+            // if (this.accept("TLPAREN")) {
+
+            // }
         }
         else if (this.accept("TNUMBER")) {
             node = new Node("NUMBER", parseFloat(this.prev().value));
