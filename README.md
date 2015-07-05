@@ -24,7 +24,7 @@ angular.module("myModule", ["evaluatex", "evaluascii"])
 ```
 
 ```html
-// Vanilla JS
+<!-- Vanilla JS -->
 <script src="evaluatex.js"></script>
 <script type="text/javascript">
 	console.log(Evaluatex);
