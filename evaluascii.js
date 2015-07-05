@@ -25,6 +25,7 @@
     var TOKENS = {
         TSYMBOL: /[A-Za-z][A-Za-z0-9]*/,
         TWS: /\s+/,
+        TABS: /\|/,
         TCOMMA: /,/,
         TPOWER: /\^/,
         TPLUS: /\+/,
@@ -440,6 +441,16 @@
         else if (this.accept("TLPAREN")) {
             var node = this.orderExpression();
             this.expect("TRPAREN");
+            return node;
+        }
+
+        // Parse absolute value.
+        // Absolute values are contained in pipes (`|`) and are treated quite
+        // like parens.
+        else if (this.accept("TABS")) {
+            var node = new Node("FUNCTION", Math.abs);
+            node.add(this.orderExpression());
+            this.expect("TABS");
             return node;
         }
 

@@ -18,7 +18,10 @@ var formulae = [
     ["(-b + sqrt(b^2 - 4a * c)) / (2 a)", 3, { a: 2, b : -4, c: -6 }],
 
     // Test implicit multiplication
-    ["-2a + - 2 a + (2)(a a)", 6, { a: 3 }]
+    ["-2a + - 2 a + (2)(a a)", 6, { a: 3 }],
+
+    // Test absolute value
+    ["2 + -|6 - 2^4| * 9", -88]
 ];
 
 describe("Evaluascii.js", function() {
