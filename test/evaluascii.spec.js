@@ -21,7 +21,13 @@ var formulae = [
     ["-2a + - 2 a + (2)(a a)", 6, { a: 3 }],
 
     // Test absolute value
-    ["2 + -|6 - 2^4| * 9", -88]
+    ["2 + -|6 - 2^4| * 9", -88],
+
+    // Test custom functions
+    ["incr 2 + incr(3)", 7, { incr: function(a) { return a + 1; } }],
+
+    // Test factorial -40320
+    ["-(2^3)!", -40320]
 ];
 
 describe("Evaluascii.js", function() {

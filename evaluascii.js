@@ -6,7 +6,7 @@
     // This function automatically creates and invokes the lexer, parser, and evaluator.
     Evaluascii.evaluate = function(expression, locals) {
         var l = new Evaluascii.Lexer(expression);
-        var p = new Evaluascii.Parser(l.tokens());
+        var p = new Evaluascii.Parser(l.tokens(), locals);
         var tree = p.parse();
         return tree.evaluate(locals || {});
     };
@@ -16,7 +16,7 @@
     
     // List of AST nodes that are allowed to contain one child.
     // All other nodes with one child will be removed when the AST is simplified.
-    var UNARY_NODES = ["FUNCTION", "NEGATE", "INVERSE"];
+    var UNARY_NODES = ["FUNCTION", "NEGATE", "INVERSE", "FACT"];
 
     // List of token types with the regexes that match that token.
     // Tokens are listed in order or precedence - tokens higher in this list
@@ -26,6 +26,7 @@
         TSYMBOL: /[A-Za-z][A-Za-z0-9]*/,
         TWS: /\s+/,
         TABS: /\|/,
+        TBANG: /!/,
         TCOMMA: /,/,
         TPOWER: /\^/,
         TPLUS: /\+/,
@@ -105,7 +106,21 @@
                     result = -this.children[0].evaluate(locals);
                     break;
                 case "INVERSE":
-                    result = 1.0/this.children[0].evaluate(locals);
+                    result = 1.0 / this.children[0].evaluate(locals);
+                    break;
+                case "FACT":
+                    result = 1;
+                    var i = Math.round(this.children[0].evaluate(locals));
+
+                    // Factorials for numbers < 0 are not defined.
+                    if (i < 0) {
+                        throw "Can't take the factorial of a negative number!";
+                    }
+
+                    // Compute the factorial.
+                    for (i; i > 0; i--) {
+                        result *= i;
+                    }
                     break;
                 default:
                     throw "Node not recognized: " + this.type;
@@ -216,7 +231,8 @@
     // tree that represents the math to be evaluated, taking into account the
     // correct order of operations.
     // This is a simple recursive-descent parser based on [Wikipedia's example](https://en.wikipedia.org/wiki/Recursive_descent_parser).
-    Evaluascii.Parser = function(tokens) {
+    Evaluascii.Parser = function(tokens, locals) {
+        this.locals = locals || {};
         this.tokens = [];
         this.cursor = 0;
 
@@ -260,12 +276,22 @@
         for (i in this.tokens) {
             var current = this.tokens[i];
             if (current.type == "TSYMBOL") {
+                // If the symbol is a Math constant
                 if (isFinite(Math[current.value])) {
-                    this.tokens[i] = new Token("TNUMBER", Math[current.value]);
+                    this.tokens[i] = new Token
+
+                    ("TNUMBER", Math[current.value]);
                 }
+
+                // If the symbol is a Math function
                 else if (typeof Math[current.value] == "function") {
                     // The token's value will be the function object.
                     this.tokens[i] = new Token("TFUNCTION", Math[current.value]);
+                }
+
+                // If the symbol is a local function
+                else if (typeof locals[current.value] == "function") {
+                    this.tokens[i] = new Token("TFUNCTION", locals[current.value]);
                 }
             }
         }
@@ -397,14 +423,18 @@
 
     // Parses values or nested expressions.
     Evaluascii.Parser.prototype.val = function() {
+        // Don't return new nodes immediately, since we need to parse
+        // factorials, which come at the END of values.
+        var node = {};
+
         if (this.accept("TSYMBOL")) {
-            return new Node("SYMBOL", this.prev().value);
+            node = new Node("SYMBOL", this.prev().value);
         }
         else if (this.accept("TNUMBER")) {
-            return new Node("NUMBER", parseFloat(this.prev().value));
+            node = new Node("NUMBER", parseFloat(this.prev().value));
         }
         else if (this.accept("TFUNCTION")) {
-            var node = new Node("FUNCTION", this.prev().value);
+            node = new Node("FUNCTION", this.prev().value);
 
             // Multi-param functions require parens and may have commas
             if (this.accept("TLPAREN")) {
@@ -421,8 +451,6 @@
             else {
                 node.add(this.power());
             }
-
-            return node;
         }
 
         // Parse negative values like -42.
@@ -431,27 +459,24 @@
         // Notice the `power()` rule that comes after a negative sign so that
         // expressions like `-4^2` return -16 instead of 16.
         else if (this.accept("TMINUS")) {
-            var node = new Node("NEGATE");
+            node = new Node("NEGATE");
             node.add(this.power());
-            return node;
         }
 
         // Parse nested expression with parentheses.
         // Notice that the parser expects an RPAREN token after the expression.
         else if (this.accept("TLPAREN")) {
-            var node = this.orderExpression();
+            node = this.orderExpression();
             this.expect("TRPAREN");
-            return node;
         }
 
         // Parse absolute value.
         // Absolute values are contained in pipes (`|`) and are treated quite
         // like parens.
         else if (this.accept("TABS")) {
-            var node = new Node("FUNCTION", Math.abs);
+            node = new Node("FUNCTION", Math.abs);
             node.add(this.orderExpression());
             this.expect("TABS");
-            return node;
         }
 
         // All parsing rules should have terminated or recursed by now.
@@ -459,6 +484,17 @@
         else {
             throw "Unexpected " + this.current().value + ", token " + this.cursor;
         }
+
+        // Process postfix operations like factorials.
+        
+        // Parse factorial.
+        if (this.accept("TBANG")) {
+            var factNode = new Node("FACT");
+            factNode.add(node);
+            return factNode;
+        }
+
+        return node;
     };
 
     // Export stuff.
