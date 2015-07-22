@@ -356,6 +356,21 @@
     // "non-terminals" in parsing lingo.
     // Essentially, they implement a sort of finite state automaton.
     // You should read the [Wikipedia article](https://en.wikipedia.org/wiki/Recursive_descent_parser) on recursive-descent parsing if you want to know more about how these work.
+    
+    // ### Grammar:
+    // ```
+    // orderExpression : sum
+    // sum : product { ('+'|'-') product }
+    // product : power { ('*'|'/') power }
+    //         | power '(' orderExpression ')'
+    // val : SYMBOL
+    //     | NUMBER
+    //     | FUNCTION '(' orderExpression { ',' orderExpression } ')'
+    //     | '-' val
+    //     | '(' orderExpression ')'
+    //     | '|' orderExpression '|'
+    //     | val '!'
+    // ```
 
     // Parses a mathematical expression with respect to the order of operations.
     // Currently just a better-named alias for `sum()`.
