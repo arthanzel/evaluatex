@@ -15,6 +15,7 @@
         var l = new Evaluascii.Lexer(expression);
         var p = new Evaluascii.Parser(l.tokens(), locals);
         var tree = p.parse();
+        tree.printTree();
         return tree.evaluate(locals || {});
     };
 
@@ -23,13 +24,22 @@
     
     // List of AST nodes that are allowed to contain one child.
     // All other nodes with one child will be removed when the AST is simplified.
-    var UNARY_NODES = ["FUNCTION", "NEGATE", "INVERSE", "FACT"];
+    var UNARY_NODES = ["FUNCTION", "NEGATE", "INVERSE", "FACT", "COMMAND"];
 
     // List of token types with the regexes that match that token.
     // Tokens are listed in order or precedence - tokens higher in this list
     // will be matched first.
     // Token types begin with a 'T' to differentiate them from node types.
     var TOKENS = {
+        // Match (, [, {, \left(, \left[, \left{
+        TLPAREN: /[\(\[\{]|\\left\(|\\left\[|\\left\{/,
+
+        // Match ), ], }, \right), \right], \right}
+        TRPAREN: /[\)\]\}]|\\right\)|\\right\]|\\right\}/,
+        TPLUS: /\+/,
+        TMINUS: /\-/,
+        TTIMES: /\*|\\cdot|\\times/,
+        TDIVIDE: /\/|\\div|\\divide|\\over/,
         TCOMMAND: /\\[A-Za-z]+/,
         TSYMBOL: /[A-Za-z][A-Za-z0-9]*/,
         TWS: /\s+/,
@@ -37,13 +47,29 @@
         TBANG: /!/,
         TCOMMA: /,/,
         TPOWER: /\^/,
-        TPLUS: /\+/,
-        TMINUS: /\-/,
-        TTIMES: /\*/,
-        TDIVIDE: /\//,
-        TLPAREN: /[\(\[\{]/,
-        TRPAREN: /[\)\]\}]/,
         TNUMBER: /\d+(\.\d+)?/
+    };
+
+    var ARITY = {
+        "frac": 2,
+        "sin": 1,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 1,
+        "arcsin": 1,
+        "arccos": 1,
+        "arctan": 1,
+        "sec": 1,
+        "csc": 1,
+        "cot": 1,
+        "asec": 1,
+        "acsc": 1,
+        "acot": 1,
+        "arcsec": 1,
+        "arccsc": 1,
+        "arccot": 1
     };
     
     // Helpful Objects
@@ -103,6 +129,12 @@
                 case "POWER":
                     result = Math.pow(this.children[0].evaluate(locals),
                                     this.children[1].evaluate(locals));
+                    break;
+                case "COMMAND":
+                    if (this.value == "frac") {
+                        result = this.children[0].evaluate(locals) /
+                                 this.children[1].evaluate(locals);
+                    }
                     break;
                 case "FUNCTION":
                     var evaluatedChildren = [];
@@ -275,6 +307,7 @@
 
         // Replace SYMBOL tokens with NUMBER or FUNCTION tokens if the symbols
         // exist in Javascript's `Math` object.
+        // Convert the value in COMMAND tokens to lower case and remove the slash.
         for (i in this.tokens) {
             var current = this.tokens[i];
             if (current.type == "TSYMBOL") {
@@ -293,6 +326,9 @@
                 else if (typeof locals[current.value] == "function") {
                     this.tokens[i] = new Token("TFUNCTION", locals[current.value]);
                 }
+            }
+            else if (current.type == "TCOMMAND") {
+                current.value = current.value.substring(1).toLowerCase();
             }
         }
     };
@@ -357,16 +393,29 @@
 
     // Parses a mathematical expression with respect to the order of operations.
     // Currently just a better-named alias for `sum()`.
+    
+    // ### Grammar:
+    // ```
+    // orderExpression : sum
+    // sum : product { ('+'|'-') product }
+    // product : power { ('*'|'/') power }
+    //         | power '(' orderExpression ')'
+    // val : SYMBOL
+    //     | NUMBER
+    //     | COMMAND { val }
+    //     | FUNCTION '(' orderExpression { ',' orderExpression } ')'
+    //     | '-' val
+    //     | '(' orderExpression ')'
+    //     | '{' orderExpression '}'
+    //     | '|' orderExpression '|'
+    //     | val '!'
+    // ```
     Evaluascii.Parser.prototype.orderExpression = function() {
-        // orderExpression = sum
-
         return this.sum();
     };
 
     // Parses sums or differences.
     Evaluascii.Parser.prototype.sum = function() {
-        // sum : product { ('+'|'-') product }
-
         var node = new Node("SUM");
         node.add(this.product());
         
@@ -392,9 +441,6 @@
 
     // Parses products and quotients.
     Evaluascii.Parser.prototype.product = function() {
-        // product : power { ('*'|'/') power }
-        //         | power '(' orderExpression ')'
-
         var node = new Node("PRODUCT");
         node.add(this.power());
         
@@ -420,10 +466,7 @@
     };
 
     // Parses exponents.
-    Evaluascii.Parser.prototype.power = function() {
-        // power: val { '^' power }
-
-        var node = new Node("POWER");
+    Evaluascii.Parser.prototype.power = function() {var node = new Node("POWER");
         node.add(this.val());
 
         // The `if` with recursion allows powers like `a ^ b ^ c` to be treated
@@ -436,14 +479,6 @@
 
     // Parses values or nested expressions.
     Evaluascii.Parser.prototype.val = function() {
-        // val : SYMBOL
-        //     | NUMBER
-        //     | FUNCTION '(' orderExpression { ',' orderExpression } ')'
-        //     | '-' val
-        //     | '(' orderExpression ')'
-        //     | '|' orderExpression '|'
-        //     | val '!'
-
         // Don't return new nodes immediately, since we need to parse
         // factorials, which come at the END of values.
         var node = {};
@@ -453,6 +488,15 @@
         }
         else if (this.accept("TNUMBER")) {
             node = new Node("NUMBER", parseFloat(this.prev().value));
+        }
+        else if (this.accept("TCOMMAND")) {
+            var commandValue = this.prev().value;
+            node = new Node("COMMAND", commandValue);
+
+            for (var i = 0; i < ARITY[commandValue]; i++) {
+                console.log(i);
+                node.add(this.val());
+            }
         }
         else if (this.accept("TFUNCTION")) {
             node = new Node("FUNCTION", this.prev().value);
