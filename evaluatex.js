@@ -1,21 +1,32 @@
 (function() {
-    var Evaluascii = {};
+    var Evaluatex = {};
 
     // This is the main function in the API.
     // It takes a math expression and a list of variables to which the expression refers.
     // This function automatically creates and invokes the lexer, parser, and evaluator.
-    Evaluascii.evaluate = function(expression, locals) {
+    Evaluatex.evaluate = function(expression, locals) {
         locals = locals || {};
 
         // Extend the locals object with convenience functions:
         locals.logn = function(x, n) {
             return Math.log(x) / Math.log(n);
         };
+        locals.rootn = function(x, n) {
+            return Math.pow(x, 1/n);
+        };
+        locals.sec = function(x) {
+            return 1 / Math.cos(x);
+        };
+        locals.csc = function(x) {
+            return 1 / Math.sin(x);
+        };
+        locals.cot = function(x) {
+            return 1 / Math.tan(x);
+        };
 
-        var l = new Evaluascii.Lexer(expression);
-        var p = new Evaluascii.Parser(l.tokens(), locals);
+        var l = new Evaluatex.Lexer(expression);
+        var p = new Evaluatex.Parser(l.tokens(), locals);
         var tree = p.parse();
-        tree.printTree();
         return tree.evaluate(locals || {});
     };
 
@@ -78,7 +89,7 @@
     // This represents a lexer token.
     // Tokens have a `type` (e.g. NUMBER, SYMBOL, PLUS), and a `value` contained
     // within the token (e.g. the actual number for a NUMBER type token).
-    var Token = Evaluascii.Token = function(type, value) {
+    var Token = Evaluatex.Token = function(type, value) {
         if (value === undefined) value = "";
 
         this.type = type;
@@ -90,7 +101,7 @@
     // This represents an AST node.
     // Like tokens, nodes have a type and value.
     // Nodes contain zero or more child nodes.
-    var Node = Evaluascii.Node = function(type, value) {
+    var Node = Evaluatex.Node = function(type, value) {
         if (value === undefined) value = "";
 
         this.type = type;
@@ -231,7 +242,7 @@
     // "tokens".
     // A string of tokens, such as `NUMBER(4) PLUS NUMBER(2)` can be more easily
     // understood by machines than raw math.
-    var Lexer = Evaluascii.Lexer = function(buffer) {
+    var Lexer = Evaluatex.Lexer = function(buffer) {
         this.buffer = buffer;
         this.cursor = 0;
     };
@@ -273,7 +284,7 @@
     // tree that represents the math to be evaluated, taking into account the
     // correct order of operations.
     // This is a simple recursive-descent parser based on [Wikipedia's example](https://en.wikipedia.org/wiki/Recursive_descent_parser).
-    Evaluascii.Parser = function(tokens, locals) {
+    Evaluatex.Parser = function(tokens, locals) {
         this.locals = locals || {};
         this.tokens = [];
         this.cursor = 0;
@@ -335,7 +346,7 @@
 
     // The primary entry point of the parser - calling `parse()` will return a
     // full AST that represents the provided tokens.
-    Evaluascii.Parser.prototype.parse = function() {
+    Evaluatex.Parser.prototype.parse = function() {
         var tree = this.orderExpression().simplify();
 
         // Throw an exception if the expression looks fully parsed but still
@@ -351,7 +362,7 @@
     // Returns true if the token under the cursor matches the given type.
     // If it does, increments the cursor to the next token.
     // If it doesn't, the cursor stays where it is.
-    Evaluascii.Parser.prototype.accept = function(token) {
+    Evaluatex.Parser.prototype.accept = function(token) {
         if (!this.current()) return false;
 
         if (this.current().type == token) {
@@ -364,7 +375,7 @@
     // Expects the next token under the cursor to match the given type.
     // If it does, increments the cursor to the next token.
     // If it doesn't, throws an exception.
-    Evaluascii.Parser.prototype.expect = function(token) {
+    Evaluatex.Parser.prototype.expect = function(token) {
         if (!this.accept(token)) {
             throw "Expected " + token + " but got " +
                 (this.current() ? this.current().value : "end of input.");
@@ -373,13 +384,13 @@
 
     // Returns the current token under the cursor.
     // This is the token that `accept()` will try to match.
-    Evaluascii.Parser.prototype.current = function() {
+    Evaluatex.Parser.prototype.current = function() {
         return this.tokens[this.cursor];
     };
 
     // Returns the previously-matched token.
     // Useful when you `accept()` a token and need to get its value later.
-    Evaluascii.Parser.prototype.prev = function() {
+    Evaluatex.Parser.prototype.prev = function() {
         return this.tokens[this.cursor - 1];
     };
 
@@ -410,12 +421,12 @@
     //     | '|' orderExpression '|'
     //     | val '!'
     // ```
-    Evaluascii.Parser.prototype.orderExpression = function() {
+    Evaluatex.Parser.prototype.orderExpression = function() {
         return this.sum();
     };
 
     // Parses sums or differences.
-    Evaluascii.Parser.prototype.sum = function() {
+    Evaluatex.Parser.prototype.sum = function() {
         var node = new Node("SUM");
         node.add(this.product());
         
@@ -440,7 +451,7 @@
     };
 
     // Parses products and quotients.
-    Evaluascii.Parser.prototype.product = function() {
+    Evaluatex.Parser.prototype.product = function() {
         var node = new Node("PRODUCT");
         node.add(this.power());
         
@@ -470,7 +481,7 @@
     };
 
     // Parses exponents.
-    Evaluascii.Parser.prototype.power = function() {var node = new Node("POWER");
+    Evaluatex.Parser.prototype.power = function() {var node = new Node("POWER");
         node.add(this.val());
 
         // The `if` with recursion allows powers like `a ^ b ^ c` to be treated
@@ -482,7 +493,7 @@
     };
 
     // Parses values or nested expressions.
-    Evaluascii.Parser.prototype.val = function() {
+    Evaluatex.Parser.prototype.val = function() {
         // Don't return new nodes immediately, since we need to parse
         // factorials, which come at the END of values.
         var node = {};
@@ -568,13 +579,13 @@
 
     // Export stuff.
     if (module) {
-        module.exports = Evaluascii;
+        module.exports = Evaluatex;
     }
     var angular = angular || 0;
     if (angular !== 0) {
-        angular.module("evaluascii", []).value("Evaluascii", Evaluascii);
+        angular.module("Evaluatex", []).value("Evaluatex", Evaluatex);
     }
     if (!module && !angular) {
-        window.Evaluascii = Evaluascii;
+        window.Evaluatex = Evaluatex;
     }
 })();
