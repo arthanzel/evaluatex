@@ -44,7 +44,8 @@ var formulae = [
     ["\\frac 4 2", 2],
     ["\\frac 4 2 ^ 3", 8],
     ["\\frac {4 ^ 2} 3", 16/3],
-    ["\\frac (4 ^ 2) 3", 16/3]
+    ["\\frac (4 ^ 2) 3", 16/3],
+    ["\\frac{1}{2}x^{-\\frac{1}{2}}", 1/6, { x: 9} ]
 ];
 
 describe("Evaluatex.js", function() {

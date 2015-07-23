@@ -299,10 +299,10 @@
                 this.tokens.splice(i + 1, 0, new Token("TTIMES"));
                 i++;
             }
-            else if (current.type == "TSYMBOL" && next.type == "TSYMBOL") {
-                this.tokens.splice(i + 1, 0, new Token("TTIMES"));
-                i++;
-            }
+            // else if (current.type == "TSYMBOL" && next.type == "TSYMBOL") {
+            //     this.tokens.splice(i + 1, 0, new Token("TTIMES"));
+            //     i++;
+            // }
         }
 
         // Replace SYMBOL tokens with NUMBER or FUNCTION tokens if the symbols
@@ -448,15 +448,19 @@
             if (this.accept("TTIMES")) {
                 node.add(this.power());
             }
-            else if (this.accept("TLPAREN")) {
-                node.add(this.orderExpression());
-                this.expect("TRPAREN");
-            }
             else if (this.accept("TDIVIDE")) {
                 // To avoid implementing a special rule for quotients, every
                 // term to be divided is simply wrapped in a node that takes
                 // the reciprocal of its value when evaluated.
                 node.add(new Node("INVERSE").add(this.power()));
+            }
+            else if (this.accept("TLPAREN")) {
+                node.add(this.orderExpression());
+                this.expect("TRPAREN");
+            }
+            else if (this.accept("TSYMBOL")) {
+                this.cursor--;
+                node.add(this.power());
             }
             else {
                 break;
