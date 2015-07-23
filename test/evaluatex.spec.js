@@ -1,7 +1,7 @@
 var assert = require("chai").assert;
 require("./helpers/aboutEqual");
 
-var Evaluatex = require("../src/evaluascii.js");
+var Evaluatex = require("../src/evaluatex.js");
 
 var formulae = [
     ["(-b + sqrt(b^2 - 4 * a * c)) / (2 * a)", 3, { a: 2, b : -4, c: -6 }],
@@ -15,11 +15,11 @@ var formulae = [
     ["\\frac{1}{2}x^{-\\frac{1}{2}}", 1/6, { x: 9} ]
 ];
 
-var test = function(expression, result, locals) {
-    assert.aboutEqual(Evaluatex.evaluate(expression, locals), result);
+var test = function(expression, result, locals, opts) {
+    assert.aboutEqual(Evaluatex.evaluate(expression, locals, opts), result);
 };
 
-describe("Evaluascii.js", function() {
+describe("Evaluatex.js", function() {
     it("evaluates simple formulae", function() {
         test("2", 2);
         test("-5 - -4", -1);
@@ -94,5 +94,10 @@ describe("Evaluascii.js", function() {
         test("log10 100 + 2", 4);
         test("log10 100 * 2", 4);
         test("log10 100 ^ 2", 4);
+    });
+
+    it("support LaTeX's stupid one-number powers", function() {
+        test("2^24", 16, {}, { latex: true });
+        test("2^{12}", 4096, {}, { latex: true });
     });
 });
