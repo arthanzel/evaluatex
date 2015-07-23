@@ -2,11 +2,11 @@ var Lexer = require("./Lexer");
 var Parser = require("./Parser");
 var localFunctions = require("./utils/localFunctions");
 
-var Evaluatex = {};
+var Evaluascii = {};
 // This is the main function in the API.
 // It takes a math expression and a list of variables to which the expression refers.
 // This function automatically creates and invokes the lexer, parser, and evaluator.
-Evaluatex.evaluate = function(expression, locals) {
+Evaluascii.evaluate = function(expression, locals) {
     locals = locals || {};
 
     // Copy the local convenience functions into the `locals` object
@@ -23,12 +23,12 @@ Evaluatex.evaluate = function(expression, locals) {
 
 // Export stuff.
 if (module) {
-    module.exports = Evaluatex;
+    module.exports = Evaluascii;
 }
 var angular = angular || 0;
 if (angular !== 0) {
-    angular.module("evaluatex", []).value("Evaluatex", Evaluatex);
+    angular.module("evaluascii", []).value("Evaluascii", Evaluatex);
 }
 if (!module && !angular) {
-    window.Evaluatex = Evaluatex;
+    window.Evaluascii = Evaluascii;
 }

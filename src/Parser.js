@@ -212,15 +212,14 @@ Parser.prototype.val = function() {
     else if (this.accept("TNUMBER")) {
         node = new Node("NUMBER", parseFloat(this.prev().value));
     }
-    // else if (this.accept("TCOMMAND")) {
-    //     var commandValue = this.prev().value;
-    //     node = new CommandNode(commandValue);
+    else if (this.accept("TCOMMAND")) {
+        var commandValue = this.prev().value;
+        node = new Node("FUNCTION");
 
-    //     for (var i = 0; i < ARITY[commandValue]; i++) {
-    //         console.log(i);
-    //         node.add(this.val());
-    //     }
-    // }
+        for (var i = 0; i < ARITY[commandValue]; i++) {
+            node.add(this.power());
+        }
+    }
     else if (this.accept("TFUNCTION")) {
         node = new Node("FUNCTION", this.prev().value);
 

@@ -1,7 +1,7 @@
 var assert = require("chai").assert;
 require("./helpers/aboutEqual");
 
-var Evaluatex = require("../src/evaluatex.js");
+var Evaluatex = require("../src/evaluascii.js");
 
 var formulae = [
     ["(-b + sqrt(b^2 - 4 * a * c)) / (2 * a)", 3, { a: 2, b : -4, c: -6 }],
@@ -19,7 +19,7 @@ var test = function(expression, result, locals) {
     assert.aboutEqual(Evaluatex.evaluate(expression, locals), result);
 };
 
-describe("Evaluatex.js", function() {
+describe("Evaluascii.js", function() {
     it("evaluates simple formulae", function() {
         test("2", 2);
         test("-5 - -4", -1);
