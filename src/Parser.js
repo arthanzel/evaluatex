@@ -46,22 +46,6 @@ Parser.prototype.preprocess = function(locals) {
             current.value = current.value.substring(1).toLowerCase();
             continue;
         }
-
-        // Add TIMES tokens in implicit multiplication.
-        // Implicit multiplication looks something like `4x` or `(1+x)(x-3)`.
-        // Doing this now makes the recursive parsing a lot simpler.
-        // for (var i = 0; i < this.tokens.length - 1; i++) {
-        //     var current = this.tokens[i];
-        //     var next = this.tokens[i+1];
-
-        //     if (current.type == "TNUMBER" && next.type == "TSYMBOL") {
-        //         this.tokens.splice(i + 1, 0, new Token("TTIMES"));
-        //         i++;
-        //     }
-        //     // else if (current.type == "TSYMBOL" && next.type == "TSYMBOL") {
-        //     //     this.tokens.splice(i + 1, 0, new Token("TTIMES"));
-        //     //     i++;
-        //     // }
     }
 };
 
@@ -190,7 +174,9 @@ Parser.prototype.product = function() {
             node.add(this.orderExpression());
             this.expect("TRPAREN");
         }
-        else if (this.accept("TSYMBOL")) {
+        else if (this.accept("TSYMBOL") ||
+                 this.accept("TNUMBER") ||
+                 this.accept("TFUNCTION")) {
             this.cursor--;
             node.add(this.power());
         }
