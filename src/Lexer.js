@@ -1,5 +1,8 @@
+var arity = require("./utils/arity");
 var tokens = require("./utils/tokens");
 var Token = require("./Token");
+
+var ALT_TOKENS = ["TPOWER", "TCOMMAND"];
 
 // The lexer reads a math expression and breaks it down into easily-digestible "tokens".
 // A string of tokens, such as `NUMBER(4) PLUS NUMBER(2)` can be more easily understood by machines than raw math.
@@ -7,6 +10,10 @@ var Lexer = module.exports = function(buffer, opts) {
     this.buffer = buffer;
     this.cursor = 0;
     this.opts = opts || {};
+    this.tokens = [];
+
+    // Lex
+    this.lexExpression();
 };
 
 // Returns true if there are more tokens to be read from the buffer.
@@ -16,6 +23,10 @@ Lexer.prototype.hasNext = function() {
 
 // Gets the next token in the stream.
 Lexer.prototype.next = function(len) {
+    if (!this.hasNext()) {
+        throw "Lexer error: reached end of stream.";
+    }
+
     // Try matching each token in `this.tokenMap`.
     for (k in tokens) {
         var match = tokens[k].exec(this.buffer.substr(this.cursor, len));
@@ -26,23 +37,68 @@ Lexer.prototype.next = function(len) {
             return new Token(k, match[0]);
         }
     }
-    throw "Can't match token at pos " + this.buffer.substring(this.cursor);
+    throw "Lexer error: Can't match token at position " +
+          this.cursor + 
+          ": " +
+          this.buffer.substr(this.cursor, Math.min(len, 10)) +
+          ".";
+};
+
+Lexer.prototype.nextSingle = function() {
+    // TCOMMAND tokens are considered "single".
+    if (this.buffer.charAt(this.cursor) == "\\") {
+        return this.next();
+    }
+    
+    return this.next(1);
 };
 
 // Returns a list of all tokens for this lexer.
-Lexer.prototype.tokens = function() {
-    var tokens = [];
+Lexer.prototype.lexExpression = function() {
     while (this.hasNext()) {
         var token = this.next();
-        tokens.push(token);
+        this.tokens.push(token);
 
-        if (token.type == "TPOWER" && this.opts.latex) {
-            var token2 = {};
-            do {
-                token2 = this.next(1);
-            } while (token2.type == "TWS")
-            tokens.push(token2);
+        if (token.value == "{") {
+            this.lexExpression();
+        }
+        else if (token.value == "}") {
+            return;
+        }
+        else if (this.opts.latex && ALT_TOKENS.indexOf(token.type) != -1) {
+            var nArgs = 1;
+
+            if (token.type == "TCOMMAND") {
+                nArgs = arity[token.value.substring(1).toLowerCase()] || 1;
+            }
+
+            for (var i = 0; i < nArgs; i++) {
+                this.skipWhitespace();
+                var next = this.nextSingle();
+                if (next.value == "{") {
+                    this.tokens.push(next);
+                    this.lexExpression();
+                }
+                else {
+                    this.tokens.push(new Token("TLPAREN", "{"));
+                    this.tokens.push(next);
+                    this.tokens.push(new Token("TRPAREN", "}"));
+                }
+            }
         }
     }
-    return tokens;
+};
+
+Lexer.prototype.toString = function() {
+    var tokenStrings = [];
+    for (i in this.tokens) {
+        tokenStrings.push(this.tokens[i].toString());
+    }
+    return tokenStrings.join(" ");
+};
+
+Lexer.prototype.skipWhitespace = function() {
+    while (tokens["TWS"].test(this.buffer.charAt(this.cursor))) {
+        this.cursor++;
+    }
 };

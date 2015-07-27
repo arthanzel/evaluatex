@@ -16,7 +16,7 @@ Evaluatex.evaluate = function(expression, locals, opts) {
     }
 
     var l = new Lexer(expression, opts);
-    var p = new Parser(l.tokens(), locals);
+    var p = new Parser(l.tokens, locals);
     var tree = p.parse();
     // tree.printTree();
     return tree.evaluate(locals || {});

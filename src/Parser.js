@@ -269,6 +269,7 @@ Parser.prototype.val = function() {
     // All parsing rules should have terminated or recursed by now.
     // Throw an exception if this is not the case.
     else {
+        console.log(this.tokens);
         throw "Unexpected " + this.current().type + ", token " + this.cursor;
     }
 

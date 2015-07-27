@@ -101,11 +101,12 @@ describe("Evaluatex.js", function() {
         test("2^{12}", 4096, {}, { latex: true });
     });
 
-    it("supports LaTeX typesetting", function() {
+    it.only("supports LaTeX typesetting", function() {
         test("\\frac 4 2", 2, {}, { latex: true });
         test("\\frac 4 2 ^ 3", 8, {}, { latex: true });
         test("\\frac {4 ^ 2} 3", 16/3, {}, { latex: true });
-        test("\\frac (4 ^ 2) 3", 16/3, {}, { latex: true });
+        test("\\frac {(4 ^ 2)} {3}", 16/3, {}, { latex: true });
+        test("\\frac {(4 ^ 2)} 32", 32/3, {}, { latex: true });
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1/6, { x: 9 }, { latex: true });
     });
 });
