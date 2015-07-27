@@ -3,18 +3,6 @@ require("./helpers/aboutEqual");
 
 var Evaluatex = require("../src/evaluatex.js");
 
-var formulae = [
-    ["(-b + sqrt(b^2 - 4 * a * c)) / (2 * a)", 3, { a: 2, b : -4, c: -6 }],
-    ["(-b + sqrt(b^2 - 4a * c)) / (2 a)", 3, { a: 2, b : -4, c: -6 }],
-
-    // Actual TeX typesetting
-    ["\\frac 4 2", 2],
-    ["\\frac 4 2 ^ 3", 8],
-    ["\\frac {4 ^ 2} 3", 16/3],
-    ["\\frac (4 ^ 2) 3", 16/3],
-    ["\\frac{1}{2}x^{-\\frac{1}{2}}", 1/6, { x: 9 } ]
-];
-
 var test = function(expression, result, locals, opts) {
     assert.aboutEqual(Evaluatex.evaluate(expression, locals, opts), result);
 };
