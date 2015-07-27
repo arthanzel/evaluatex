@@ -1,6 +1,7 @@
 // List of arities for LaTeX commands. Since LaTeX command arguments aren't delimited by parens, we'll cheat a bit and provide a bit of context to the parser about how to parse each command.
 module.exports = {
     "frac": 2,
+    "sqrt": 1,
     "sin": 1,
     "cos": 1,
     "tan": 1,
