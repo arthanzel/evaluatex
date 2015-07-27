@@ -79,6 +79,7 @@ describe("Evaluatex.js", function() {
 
     it("supports paren-less functions", function() {
         test("cos PI^2", Math.cos(Math.PI * Math.PI));
+        test("cos 0.5PI", Math.cos(0.5) * Math.PI);
         test("log10 100 + 2", 4);
         test("log10 100 * 2", 4);
         test("log10 100 ^ 2", 4);
