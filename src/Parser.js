@@ -43,7 +43,10 @@ Parser.prototype.preprocess = function(locals) {
 
         // Remove the slash in command tokens and convert to lower case
         if (current.type == "TCOMMAND") {
-            current.value = current.value.substring(1).toLowerCase();
+            // This field is unique to TCOMMAND tokens. The parser looks up the arity of the function by its name.
+            current.fnName = current.value.substring(1).toLowerCase();
+
+            current.value = Math[current.fnName] || locals[current.fnName];
             continue;
         }
     }
@@ -106,9 +109,6 @@ Parser.prototype.prev = function() {
 // "non-terminals" in parsing lingo.
 // Essentially, they implement a sort of finite state automaton.
 // You should read the [Wikipedia article](https://en.wikipedia.org/wiki/Recursive_descent_parser) on recursive-descent parsing if you want to know more about how these work.
-
-// Parses a mathematical expression with respect to the order of operations.
-// Currently just a better-named alias for `sum()`.
 
 // ### Grammar:
 // ```
@@ -213,11 +213,11 @@ Parser.prototype.val = function() {
         node = new Node("NUMBER", parseFloat(this.prev().value));
     }
     else if (this.accept("TCOMMAND")) {
-        var commandValue = this.prev().value;
-        node = new Node("FUNCTION");
+        var prev = this.prev();
+        node = new Node("FUNCTION", prev.value);
 
-        for (var i = 0; i < ARITY[commandValue]; i++) {
-            node.add(this.power());
+        for (var i = 0; i < arity[prev.fnName]; i++) {
+            node.add(this.val());
         }
     }
     else if (this.accept("TFUNCTION")) {
