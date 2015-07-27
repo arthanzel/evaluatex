@@ -96,17 +96,17 @@ describe("Evaluatex.js", function() {
         test("log10 100 ^ 2", 4);
     });
 
-    it("support LaTeX's stupid one-number powers", function() {
+    it("support LaTeX's stupid one-number expressions", function() {
         test("2^24", 16, {}, { latex: true });
         test("2^{12}", 4096, {}, { latex: true });
-    });
-
-    it.only("supports LaTeX typesetting", function() {
         test("\\frac 4 2", 2, {}, { latex: true });
         test("\\frac 4 2 ^ 3", 8, {}, { latex: true });
         test("\\frac {4 ^ 2} 3", 16/3, {}, { latex: true });
         test("\\frac {(4 ^ 2)} {3}", 16/3, {}, { latex: true });
-        test("\\frac {(4 ^ 2)} 32", 32/3, {}, { latex: true });
+        test("\\frac {4 ^ 2} 32", 32/3, {}, { latex: true });
+    });
+
+    it.only("supports LaTeX typesetting", function() {
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1/6, { x: 9 }, { latex: true });
     });
 });
