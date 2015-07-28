@@ -30,6 +30,6 @@ var angular = angular || 0;
 if (angular !== 0) {
     angular.module("evaluatex", []).value("Evaluatex", Evaluatex);
 }
-if (!module && !angular) {
+if (!angular) {
     window.Evaluatex = Evaluatex;
 }
