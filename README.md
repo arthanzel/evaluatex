@@ -1,10 +1,10 @@
 Evaluatex
 =========
-**Evaluatex** is a parser that reads and evaluates LaTeX math. It also comes with a handy little program called **Evaluascii**, which evaluates ASCIIMath. Use in Node, Angular, or with vanilla Javascript on both clients and servers.
+**Evaluatex** is a parser that reads and evaluates LaTeX and ASCII math. Use in Node, Angular, or with vanilla Javascript on both clients and servers.
 
-**Evaluatex**/**Evaluascii** can safely resolve math without relying Javascript's native `eval()` function. They also support custom variables and functions, so you can pass in arbitrary values without having to hard-code the math.
+**Evaluatex** can safely resolve math without relying Javascript's native `eval()` function. It can also support custom variables and functions, so you can pass in arbitrary values without having to hard-code the math.
 
-> **Evaluatex** is in development, but **Evaluascii** is in a very usable and full-featured state.
+> **Evaluatex** is in development. It is in a functional state, but may do weird and unexpected things such as eating your cat.
 
 Installation
 -----
@@ -16,11 +16,10 @@ $ bower install evaluatex # (coming soon!)
 ```javascript
 // Node.js
 var Evaluatex  = require("evaluatex");
-var Evaluascii = require("evaluatex/evaluascii");
 
 // Angular V1
-angular.module("myModule", ["evaluatex", "evaluascii"])
-.service("MyService", function(Evaluatex, Evaluascii) {});
+angular.module("myModule", ["evaluatex"])
+.service("MyService", function(Evaluatex) {});
 ```
 
 ```html
@@ -34,82 +33,122 @@ angular.module("myModule", ["evaluatex", "evaluascii"])
 Usage
 -----
 ```javascript
-> Evaluascii.evaluate("1 + 2 * 3 ^ 4")
+> Evaluatex.evaluate("1 + 2 * 3 ^ 4")
 163
-> Evaluascii.evaluate("sin(0.5PI) + magic", { magic: 3 })
+> Evaluatex.evaluate("sin(0.5PI) + magic", { magic: 3 })
 4
 ```
 
-Evaluascii: Features
---------------------
-Evaluascii supports all of the features you should expect from a simple calculator, including order of operations. Exponents use the `^` operator.
+Features
+--------
+By default, Evaluatex acts in ASCII mode. To use LaTeX-specific behaviour, pass in `{ latex: true }` as the **third** argument to `Evaluatex.evaluate`. Read on to learn more.
+
+Evaluatex supports all of the features you should expect from a simple calculator, including order of operations. Exponents use the `^` operator.
 
 ```javascript
-> Evaluascii.evaluate("1 + 2 * 3 ^ 4")
+> Evaluatex.evaluate("1 + 2 * 3 ^ 4")
 163
 ```
 
 You can use variables in expressions that are visible to the expression only:
 
 ```javascript
-> Evaluascii.evaluate("1 + a / b", { a: 3, b: 4 })
+> Evaluatex.evaluate("1 + a / b", { a: 3, b: 4 })
 1.75
 ```
 
 Implicit multiplication with parens or variables is not a problem.
 
 ```javascript
-> Evaluascii.evaluate("4a(1+b)", { a: 3, b: 4 })
+> Evaluatex.evaluate("4a(1+b)", { a: 3, b: 4 })
 60
 ```
 
 You have full access to Javascript's `Math` object, including all functions and constants.
 
 ```javascript
-> Evaluascii.evaluate("sin(0.5PI) + magic", { magic: 3 })
+> Evaluatex.evaluate("sin(0.5PI) + magic", { magic: 3 })
 4
 ```
 
 You can omit parens from simple functions, but be careful with implicit multiplication.
 ```javascript
-> Evaluascii.evaluate("sin 2PI") // Interpreted as sin(2) * PI
+> Evaluatex.evaluate("sin 2PI") // Interpreted as sin(2) * PI
 2.8566
+> Evaluatex.evaluate("sin PI^2") // Interpreted as sin(PI^2)
+-0.43
 ```
 
-This will hopefully be improved at some point.
+> There is no globally-accepted standard for treating coefficients inside paren-less functions. Whenever in doubt, use parentheses.
 
-You can even define custom functions. More support for this is coming soon.
+You can even define custom functions.
 
 ```javascript
-> Evaluascii.evaluate("incr(4)", { incr: function(x) { return x + 1; } })
+> Evaluatex.evaluate("incr(4)", { incr: function(x) { return x + 1; } })
 5
 ```
 
-Multi-argument functions work just as well.
+Multi-argument functions work just as well, but you need to include parentheses.
 
 ```javascript
-> Evaluascii.evaluate("hypot(3, 4)")
+> Evaluatex.evaluate("hypot(3, 4)")
 5
-> Evaluascii.evaluate("min(5,4,3,2,1)")
+> Evaluatex.evaluate("min(5,4,3,2,1)")
 1
 ```
 
-There's even a function built right in to Evaluascii to help with logs:
+There's even functions built right in to Evaluatex to help with logs, roots, and trig:
 
 ```javascript
-> Evaluascii.evaluate("logn(9, 3)")
+> Evaluatex.evaluate("logn(9, 3)")
 27
+> Evaluatex.evaluate("rootn(8, 3)")
+2
+> Evaluatex.evaluate("csc(0.25PI)")
+1.414
 ```
 
 Absolute values work like a charm...
 
 ```javascript
-> Evaluascii.evaluate("|5 - 20|")
+> Evaluatex.evaluate("|5 - 20|")
 15
 ```
 ...as do factorials, which round to the nearest integer before performing the calculation:
 
 ```javascript
-> Evaluascii.evaluate("3.5!")
+> Evaluatex.evaluate("3.5!")
 24
+```
+
+LaTeX-specific behaviour
+------------------------
+Turn on LaTeX idiosyncrasies with `{ latex: true }` in the third parameter:
+
+```javascript
+> Evaluatex.evaluate("x^24", { x: 2 }, { latex: true })
+16
+```
+
+The previous example is evaluated as x^(2) * 4, since LaTeX often takes only the first digit of a number for such operations. Use curly braces (`{` and `}`) to fix that:
+
+```javascript
+> Evaluatex.evaluate("x^{24}", { x: 2 }, { latex: true })
+16777216
+```
+
+If you try to use parens or square brackets, Evaluatex will complain.
+
+```javascript
+> Evaluatex.evaluate("x^(24)", { x: 2 }, { latex: true })
+Error!
+```
+
+LaTeX thinks that the above expression means `X^'(' * 24), which is clearly bogus syntax. When in doubt, always use braces.
+
+One more example:
+
+```javascript
+> Evaluatex.evaluate("\\frac 123") // Interpreted as (1/2) * 3
+1.5
 ```
