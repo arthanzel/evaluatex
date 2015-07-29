@@ -4,7 +4,8 @@
   "description": "Converts Latex to evaluatable Javascript.",
   "main": "evaluatex.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "test-tree": "PRINT_TREE=true mocha"
   },
   "keywords": [
     "latex",

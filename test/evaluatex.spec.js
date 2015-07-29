@@ -95,8 +95,15 @@ describe("Evaluatex.js", function() {
         test("\\frac {4 ^ 2} 32", 32/3, {}, { latex: true });
     });
 
-    it.only("supports LaTeX typesetting", function() {
+    it("supports LaTeX typesetting", function() {
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1/6, { x: 9 }, { latex: true });
         test("\\sqrt 4x", 10, { x: 5 }, { latex: true });
+    });
+});
+
+describe("Evaluatex utilities", function() {
+    it("interpolates strings", function() {
+        var interpolate = require("../src/utils/interpolate");
+        assert.equal(interpolate("a % b % c \\% d", 3, "foo"), "a 3 b foo c % d");
     });
 });

@@ -1,3 +1,4 @@
+var interpolate = require("./utils/interpolate");
 var isNumber = require("./utils/isNumber");
 
 var UNARY_NODES = ["FACTORIAL", "FUNCTION", "INVERSE", "NEGATE"];
@@ -89,9 +90,19 @@ Node.prototype.printTree = function(level) {
     // Format: `TYPE value (children)`
     // OR
     // `TYPE (children)`.
-    console.log(indent + this.type + 
-        (this.value ? " " + this.value : "") +
-        " (" + this.children.length + ")");
+    if (this.value) {
+        console.log(interpolate("%% % (%)",
+            indent,
+            this.type,
+            this.value.name || this.value,
+            this.children.length));
+    }
+    else {
+        console.log(interpolate("%% (%)",
+            indent,
+            this.type,
+            this.children.length));
+    }
 
     // Print each child.
     for (var i in this.children) {

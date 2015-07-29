@@ -26,7 +26,13 @@ Evaluatex.evaluate = function(expression, locals, opts) {
     var l = new Lexer(expression, opts);
     var p = new Parser(l.tokens, locals);
     var tree = p.parse();
-    // tree.printTree();
+
+    // Debugging aid - prints the AST after every test.
+    // Use `npm run test-tree` to set the PRINT_TREE flag.
+    if (process.env.PRINT_TREE) {
+        tree.printTree();
+    }
+    
     return tree.evaluate(locals || {});
 };
 
