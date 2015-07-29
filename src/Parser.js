@@ -46,7 +46,7 @@ Parser.prototype.preprocess = function(locals) {
             continue;
         }
 
-        // Remove the slash in command tokens and convert to lower case
+        // Remove the slash in command tokens and convert to lower case.
         if (current.type == "TCOMMAND") {
             var fnName = current.value.substring(1).toLowerCase();
             current.value = locals[fnName];
