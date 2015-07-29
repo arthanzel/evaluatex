@@ -60,10 +60,7 @@ Node.prototype.evaluate = function(locals) {
             }
             return result;
         case "SYMBOL":
-            if (isNumber(Math[this.value])) {
-                return Math[this.value]; 
-            }
-            else if (isNumber(locals[this.value])) {
+            if (isNumber(locals[this.value])) {
                 return locals[this.value];
             }
             throw "Symbol " + this.value +

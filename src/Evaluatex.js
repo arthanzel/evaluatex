@@ -10,9 +10,17 @@ Evaluatex.evaluate = function(expression, locals, opts) {
     locals = locals || {};
     opts = opts || {};
 
-    // Copy the local convenience functions into the `locals` object
+    // Copy the local convenience functions into the `locals` object.
     for (i in localFunctions) {
         locals[i] = localFunctions[i];
+    }
+
+    // Copy functions and constants from Math into the `locals` object.
+    // These will mask defined locals.
+    var mathKeys = Object.getOwnPropertyNames(Math);
+    for (i in mathKeys) {
+        var key = mathKeys[i];
+        locals[key] = Math[key];
     }
 
     var l = new Lexer(expression, opts);
@@ -30,6 +38,7 @@ var angular = angular || 0;
 if (angular !== 0) {
     angular.module("evaluatex", []).value("Evaluatex", Evaluatex);
 }
-if (!angular) {
+var window = window || false;
+if (!angular && window) {
     window.Evaluatex = Evaluatex;
 }

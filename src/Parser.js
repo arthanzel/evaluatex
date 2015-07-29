@@ -31,10 +31,7 @@ Parser.prototype.preprocess = function(locals) {
 
         // Replace symbol tokens with function tokens if the symbol exists in the Math API or in the locals.
         if (current.type == "TSYMBOL") {
-            if (typeof Math[current.value] == "function") {
-                this.tokens[i] = new Token("TFUNCTION", Math[current.value]);
-            }
-            else if (typeof locals[current.value] == "function") {
+            if (typeof locals[current.value] == "function") {
                 this.tokens[i] = new Token("TFUNCTION", locals[current.value]);
             }
 
@@ -46,7 +43,7 @@ Parser.prototype.preprocess = function(locals) {
             // This field is unique to TCOMMAND tokens. The parser looks up the arity of the function by its name.
             current.fnName = current.value.substring(1).toLowerCase();
 
-            current.value = Math[current.fnName] || locals[current.fnName];
+            current.value = locals[current.fnName];
             continue;
         }
     }
