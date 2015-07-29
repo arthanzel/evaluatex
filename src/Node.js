@@ -1,8 +1,10 @@
 var interpolate = require("./utils/interpolate");
 var isNumber = require("./utils/isNumber");
 
+// Nodes that are allowed to have only one child. Nodes that have one child and are not in this list will be simplified during parsing.
 var UNARY_NODES = ["FACTORIAL", "FUNCTION", "INVERSE", "NEGATE"];
 
+// Represents a node in an abstract syntax tree. Nodes have a type (such as NUMBER), a value (such as the actual number value), and a list of child nodes.
 var Node = module.exports = function Node(type, value) {
     if (value === undefined) value = "";
 
@@ -11,10 +13,12 @@ var Node = module.exports = function Node(type, value) {
     this.children = [];
 };
 
+// Adds a child node.
 Node.prototype.add = function(node) {
     this.children.push(node); return this;
 };
 
+// Calculates the numerical representation of this node, evaluating any child nodes as well.
 Node.prototype.evaluate = function(locals) {
     switch (this.type) {
         case "FACTORIAL":
@@ -112,7 +116,6 @@ Node.prototype.printTree = function(level) {
 
 // Simplifies this Node and all children recursively, returning a new
 // node tree.
-// Simplification removes all Nodes with one child, unless the node's `unary` flag is set.
 Node.prototype.simplify = function() {
     if (this.children.length > 1 || this.isUnary()) {
         var newNode = new Node(this.type, this.value);

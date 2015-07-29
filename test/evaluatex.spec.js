@@ -49,6 +49,7 @@ describe("Evaluatex.js", function() {
 
     it("supports parens", function() {
         test("{1 + [2 - {3 + 4}])", -4);
+        test("{1 + \\left[2 - \\left(3 + 4\\right)\\right]}", -4);
     });
 
     it("has own convenience functions", function() {

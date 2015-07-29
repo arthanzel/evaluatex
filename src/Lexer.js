@@ -1,4 +1,5 @@
 var arity = require("./utils/arity");
+var interpolate = require("./utils/interpolate");
 var tokens = require("./utils/tokens");
 var Token = require("./Token");
 
@@ -30,6 +31,7 @@ Lexer.prototype.next = function(len) {
     // Try matching each token in `this.tokenMap`.
     for (k in tokens) {
         var match = tokens[k].exec(this.buffer.substr(this.cursor, len));
+
         // A matching token *must* begin immediately at the cursor, otherwise
         // it probably appears later in the buffer.
         if (match && match.index == 0) {
@@ -37,15 +39,17 @@ Lexer.prototype.next = function(len) {
             return new Token(k, match[0]);
         }
     }
-    throw "Lexer error: Can't match token at position " +
-          this.cursor + 
-          ": " +
-          this.buffer.substr(this.cursor, Math.min(len, 10)) +
-          ".";
+
+    throw interpolate("Lexer error: Can't match token at position %: %.",
+                      this.cursor,
+                      this.buffer.substr(this.cursor, Math.min(len, 10)));
 };
 
+// Returns a token corresponding to the next single *letter* in the buffer,
+// unless the following token is a LaTeX command, in which case the entire command
+// token is returned. This makes it possible to lex LaTeX's stupidities like a^bc
+// evaluating to a^{b}c
 Lexer.prototype.nextSingle = function() {
-    // TCOMMAND tokens are considered "single".
     if (this.buffer.charAt(this.cursor) == "\\") {
         return this.next();
     }
@@ -65,6 +69,8 @@ Lexer.prototype.lexExpression = function() {
         else if (token.value == "}") {
             return;
         }
+
+        // If the current token is one of those that accepts a single-char argument in LaTeX, deal with that accordingly, taking into account arity and left curly braces that change the formatting.
         else if (this.opts.latex && ALT_TOKENS.indexOf(token.type) != -1) {
             var nArgs = 1;
 
@@ -72,6 +78,7 @@ Lexer.prototype.lexExpression = function() {
                 nArgs = arity[token.value.substring(1).toLowerCase()] || 1;
             }
 
+            // Lex arguments of the token
             for (var i = 0; i < nArgs; i++) {
                 this.skipWhitespace();
                 var next = this.nextSingle();
@@ -80,6 +87,7 @@ Lexer.prototype.lexExpression = function() {
                     this.lexExpression();
                 }
                 else {
+                    // Surround single-letter arguments with parens to make them more explicit to the parser.
                     this.tokens.push(new Token("TLPAREN", "{"));
                     this.tokens.push(next);
                     this.tokens.push(new Token("TRPAREN", "}"));

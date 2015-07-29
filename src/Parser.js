@@ -1,6 +1,7 @@
 var Node = require("./Node");
 var Token = require("./Token");
 var arity = require("./utils/arity");
+var replacementTable = require("./utils/replacementTable");
 
 // Parser
 // ======
@@ -23,27 +24,32 @@ var Parser = module.exports = function(tokens, locals) {
     this.preprocess(locals);
 };
 
+// This function applies some useful transformations to the token stream before it is parsed. This alleviates some work from the parser and keeps the parser and node code clean.
 Parser.prototype.preprocess = function(locals) {
     for (i in this.tokens) {
         var previous = this.tokens[i - 1] || null;
         var current = this.tokens[i];
         var next = this.tokens[i + 1] || null;
 
+        // First step is to perform 1:1 replacements with tokens in the replacement table.
+        var key = current.type + ":" + current.value;
+        if (replacementTable[key]) {
+            this.tokens[i] = replacementTable[key];
+            continue;
+        }
+
         // Replace symbol tokens with function tokens if the symbol exists in the Math API or in the locals.
         if (current.type == "TSYMBOL") {
             if (typeof locals[current.value] == "function") {
                 this.tokens[i] = new Token("TFUNCTION", locals[current.value]);
             }
-
             continue;
         }
 
         // Remove the slash in command tokens and convert to lower case
         if (current.type == "TCOMMAND") {
-            // This field is unique to TCOMMAND tokens. The parser looks up the arity of the function by its name.
-            current.fnName = current.value.substring(1).toLowerCase();
-
-            current.value = locals[current.fnName];
+            var fnName = current.value.substring(1).toLowerCase();
+            current.value = locals[fnName];
             continue;
         }
     }
@@ -213,7 +219,7 @@ Parser.prototype.val = function() {
         var prev = this.prev();
         node = new Node("FUNCTION", prev.value);
 
-        for (var i = 0; i < arity[prev.fnName]; i++) {
+        for (var i = 0; i < arity[prev.value.name]; i++) {
             node.add(this.val());
         }
     }

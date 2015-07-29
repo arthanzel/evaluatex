@@ -9,7 +9,7 @@ module.exports = {
     TMINUS: /\-/,
     TTIMES: /\*/,
     TDIVIDE: /\//,
-    TCOMMAND: /\\[A-Za-z]+/,
+    TCOMMAND: /\\[A-Za-z]+[\(\)\[\]]?/,
     TSYMBOL: /[A-Za-z][A-Za-z0-9]*/,
     TWS: /\s+/, // Whitespace
     TABS: /\|/,
