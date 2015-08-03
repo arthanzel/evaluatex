@@ -30,6 +30,12 @@ angular.module("myModule", ["evaluatex"])
 </script>
 ```
 
+Building
+--------
+`npm` test will run a set of unit tests defined in `./test/evaluatex.spec.js`. These tests run in Node, and not in any browser runtime.
+
+`npm run compile` will build the full script to `./evalulatex.js`. You can include this in your HTML files.
+
 Usage
 -----
 ```javascript
@@ -100,8 +106,8 @@ Multi-argument functions work just as well, but you need to include parentheses.
 There's even functions built right in to Evaluatex to help with logs, roots, and trig:
 
 ```javascript
-> Evaluatex.evaluate("logn(9, 3)")
-27
+> Evaluatex.evaluate("logn(81, 3)")
+4
 > Evaluatex.evaluate("rootn(8, 3)")
 2
 > Evaluatex.evaluate("csc(0.25PI)")
@@ -114,10 +120,11 @@ Absolute values work like a charm...
 > Evaluatex.evaluate("|5 - 20|")
 15
 ```
+
 ...as do factorials, which round to the nearest integer before performing the calculation:
 
 ```javascript
-> Evaluatex.evaluate("3.5!")
+> Evaluatex.evaluate("3.6!")
 24
 ```
 
