@@ -1,98 +1,5 @@
-console.log("EVALUATEX");
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = setTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            currentQueue[queueIndex].run();
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    clearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        setTimeout(drainQueue, 0);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-},{}],2:[function(require,module,exports){
-(function (process){
+(function (global){
 var Lexer = require("./Lexer");
 var Parser = require("./Parser");
 var localFunctions = require("./utils/localFunctions");
@@ -124,9 +31,9 @@ Evaluatex.evaluate = function(expression, locals, opts) {
 
     // Debugging aid - prints the AST after every test.
     // Use `npm run test-tree` to set the PRINT_TREE flag.
-    if (process.env.PRINT_TREE) {
-        tree.printTree();
-    }
+    // if (process.env.PRINT_TREE) {
+    //     tree.printTree();
+    // }
     
     return tree.evaluate(locals || {});
 };
@@ -135,19 +42,15 @@ Evaluatex.evaluate = function(expression, locals, opts) {
 if (module) {
     module.exports = Evaluatex;
 }
-var angular = angular || false;
+var angular = global.angular || false;
 if (angular) {
     angular.module("evaluatex", []).value("Evaluatex", Evaluatex);
 }
-console.log(window);
-var window = window || false;
-console.log("preexport" + window);
-if (!angular && window) {
-    console.log("export");
-    window.Evaluatex = Evaluatex;
+else {
+    global.Evaluatex = Evaluatex;
 }
-}).call(this,require('_process'))
-},{"./Lexer":3,"./Parser":5,"./utils/localFunctions":10,"_process":1}],3:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./Lexer":2,"./Parser":4,"./utils/localFunctions":9}],2:[function(require,module,exports){
 var arity = require("./utils/arity");
 var interpolate = require("./utils/interpolate");
 var tokens = require("./utils/tokens");
@@ -260,7 +163,7 @@ Lexer.prototype.skipWhitespace = function() {
         this.cursor++;
     }
 };
-},{"./Token":6,"./utils/arity":7,"./utils/interpolate":8,"./utils/tokens":12}],4:[function(require,module,exports){
+},{"./Token":5,"./utils/arity":6,"./utils/interpolate":7,"./utils/tokens":11}],3:[function(require,module,exports){
 var interpolate = require("./utils/interpolate");
 var isNumber = require("./utils/isNumber");
 
@@ -395,7 +298,7 @@ Node.prototype.simplify = function() {
     }
 };
 
-},{"./utils/interpolate":8,"./utils/isNumber":9}],5:[function(require,module,exports){
+},{"./utils/interpolate":7,"./utils/isNumber":8}],4:[function(require,module,exports){
 var Node = require("./Node");
 var Token = require("./Token");
 var arity = require("./utils/arity");
@@ -685,7 +588,7 @@ Parser.prototype.val = function() {
     return node;
 };
 
-},{"./Node":4,"./Token":6,"./utils/arity":7,"./utils/replacementTable":11}],6:[function(require,module,exports){
+},{"./Node":3,"./Token":5,"./utils/arity":6,"./utils/replacementTable":10}],5:[function(require,module,exports){
 // A `Token` is a generic construct that has a `type` and `value`. Tokens are used by the lexer and parser.
 // The lexer assigns each token a type, such as `NUMBER`; and a value, such as the actual numeric value of the token.
 var Token = module.exports = function(type, value) {
@@ -708,7 +611,7 @@ Token.prototype.equals = function(type, value) {
 Token.prototype.toString = function() {
     return this.type + "(" + this.value + ")";
 };
-},{}],7:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // List of arities for LaTeX commands. Since LaTeX command arguments aren't delimited by parens, we'll cheat a bit and provide a bit of context to the parser about how to parse each command.
 module.exports = {
     "frac": 2,
@@ -726,7 +629,7 @@ module.exports = {
     "acsc": 1,
     "acot": 1,
 };
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 // Function to interpolate strings. It will return a new string, replacing every instance of the '%' character with an argument.
 // Usage: interpolate("Letter % Number %", "A", 3) -> "Letter A Number 3"
 module.exports = function interpolate(str) {
@@ -752,12 +655,12 @@ module.exports = function interpolate(str) {
 
     return newString;
 };
-},{}],9:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 // Helper method to check whether a value exists and is, in fact, a number.
 module.exports = function isNumber(a) {
     return a !== null && isFinite(a);
 }
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 // Map of convenient functions missing from Javascript's Math API. These will be mixed in to the local variables when expressions are being evaluated.
 module.exports = {
     frac: function frac(a, b) {
@@ -779,7 +682,7 @@ module.exports = {
         return 1 / Math.tan(x);
     }
 };
-},{}],11:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var Token = require("../Token");
 
 // This table lists tokens that should be replaced by other tokens before parsing.
@@ -790,7 +693,7 @@ module.exports = {
     "TCOMMAND:\\left[": new Token("TLPAREN", "["),
     "TCOMMAND:\\right]": new Token("TRPAREN", "]")
 };
-},{"../Token":6}],12:[function(require,module,exports){
+},{"../Token":5}],11:[function(require,module,exports){
 // List of token types with the regexes that match that token. Tokens are listed in order of precedence. Tokens higher in the list will be matched first. All token types begin with a 'T' to differentiate them from node types.
 module.exports = {
     // Match (, [, {.
@@ -811,4 +714,4 @@ module.exports = {
     TPOWER: /\^/,
     TNUMBER: /\d+(\.\d+)?/
 };
-},{}]},{},[2]);
+},{}]},{},[1]);

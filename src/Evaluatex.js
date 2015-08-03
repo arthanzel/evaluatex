@@ -29,9 +29,9 @@ Evaluatex.evaluate = function(expression, locals, opts) {
 
     // Debugging aid - prints the AST after every test.
     // Use `npm run test-tree` to set the PRINT_TREE flag.
-    if (process.env.PRINT_TREE) {
-        tree.printTree();
-    }
+    // if (process.env.PRINT_TREE) {
+    //     tree.printTree();
+    // }
     
     return tree.evaluate(locals || {});
 };
@@ -40,11 +40,10 @@ Evaluatex.evaluate = function(expression, locals, opts) {
 if (module) {
     module.exports = Evaluatex;
 }
-var angular = angular || false;
+var angular = global.angular || false;
 if (angular) {
     angular.module("evaluatex", []).value("Evaluatex", Evaluatex);
 }
-var window = window || false;
-if (!angular && window) {
-    window.Evaluatex = Evaluatex;
+else {
+    global.Evaluatex = Evaluatex;
 }
