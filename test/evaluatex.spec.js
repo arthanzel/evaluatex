@@ -98,7 +98,7 @@ describe("Evaluatex.js", function() {
 
     it("supports LaTeX typesetting", function() {
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1/6, { x: 9 }, { latex: true });
-        test("\\sqrt 4x", 10, { x: 5 }, { latex: true });
+        test("\\sqrt 45", 10, {} { latex: true });
     });
 });
 

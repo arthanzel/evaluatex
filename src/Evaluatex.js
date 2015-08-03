@@ -40,8 +40,8 @@ Evaluatex.evaluate = function(expression, locals, opts) {
 if (module) {
     module.exports = Evaluatex;
 }
-var angular = angular || 0;
-if (angular !== 0) {
+var angular = angular || false;
+if (angular) {
     angular.module("evaluatex", []).value("Evaluatex", Evaluatex);
 }
 var window = window || false;
