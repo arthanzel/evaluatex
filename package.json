@@ -2,12 +2,11 @@
   "name": "Evaluatex.js",
   "version": "1.0.0",
   "description": "Converts Latex to evaluatable Javascript.",
-  "main": "evaluatex.js",
+  "main": "src/Evaluatex.js",
   "repository": "https://github.com/arthanzel/evaluatex",
   "scripts": {
     "compile": "browserify src/Evaluatex.js -o evaluatex.js",
-    "test": "mocha",
-    "test-tree": "PRINT_TREE=true mocha"
+    "test": "mocha"
   },
   "keywords": [
     "latex",

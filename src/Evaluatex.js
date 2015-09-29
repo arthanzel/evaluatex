@@ -28,10 +28,7 @@ Evaluatex.evaluate = function(expression, locals, opts) {
     var tree = p.parse();
 
     // Debugging aid - prints the AST after every test.
-    // Use `npm run test-tree` to set the PRINT_TREE flag.
-    // if (process.env.PRINT_TREE) {
-    //     tree.printTree();
-    // }
+    // tree.printTree();
     
     return tree.evaluate(locals || {});
 };
@@ -45,5 +42,6 @@ if (angular) {
     angular.module("evaluatex", []).value("Evaluatex", Evaluatex);
 }
 else {
+    // Browserify will transform this into the window object.
     global.Evaluatex = Evaluatex;
 }
