@@ -3,8 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <title>Evaluatex.js</title>
+
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700|Bree+Serif' rel='stylesheet' type='text/css'>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f8f8f8;
+            font: 16px "Open Sans", Helvetica, Arial, sans-serif;
+            padding-bottom: 20px;
+        }
+
+        p {
+            line-height: 160%;
+        }
+
+        a {
+            color: #d35;
+            text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+
+        code, .code , pre{
+            background: white;
+            border: 1px solid #d35;
+            display: block;
+            font: 14px monospace;
+            padding: 5px 7px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            white-space: -moz-pre-wrap; 
+            white-space: -pre-wrap;
+            white-space: -o-pre-wrap;
+            word-wrap: break-word;  
+        }
+
+        h1 {
+            color: #d35;
+            font: bold 100px "Bree Serif", Helvetica, Arial, sans-serif;
+            margin: 15px 0px;
+            text-align: center;
+            text-shadow: 3px 3px 5px #353;
+        }
+
+        h2 {
+            clear: both;
+            color: #d35;
+            font: 26px "Open Sans", Helvetica, Arial, sans-serif;
+            text-align: center;
+        }
+
+        strong, b {
+            font-weight: 700;
+        }
+
+        .wrapper {
+            border: 1px dashed #ddd;
+            margin: auto;
+            max-width: 800px;
+            padding: 8px;
+            width: 90%;
+        }
+
+        .red { color: #a00; }
+        .yellow { color: #aa0; }
+        .grey { color: #888; }
+
+        .example { clear: both; }
+        .example textarea {
+            float: left;
+            height: 100px;
+            width: 50%;
+        }
+        .example p {
+            float: left;
+            padding: 0px 10px;
+        }
+        .example:after {clear:both;}
+    </style>
+
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script src="./evaluatex.js"></script>
+    <script type="text/javascript">
+    $(function() {
+        // Insert a target="_blank" into all links to save typing.
+        $("a").attr("target", "_blank");
+
+        $("textarea").keydown(function(e) {
+            setTimeout(function() { update($(e.currentTarget)); }, 50);
+        });
+
+        function update(textarea) {
+            try {
+                var r = Evaluatex.evaluate(textarea.val(), {}, { latex: textarea.hasClass("latex") });
+                textarea.siblings(".result").text("Result: " + r);
+            }
+            catch (x) {
+                textarea.siblings(".result").text("Error! Check your math expression.");
+            }
+        }
+
+        $(".example textarea").each(function(i, e) {
+            update($(e));
+        });
+    });
+    </script>
 </head>
 <body>
-    
+    <a href="https://github.com/arthanzel"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+
+    <div class="wrapper">
+        <h1>Evaluatex.js</h1>
+        <h2>Latex and ASCIIMath evaluator for Javascript.</h2>
+
+        <p><b>Install with <a href="http://bower.io">Bower</a>:</b></p>
+        <code>$ bower install evaluatex</code>
+        <p>Node package coming soon. Get zipped releases <a href="https://github.com/arthanzel/evaluatex/releases">here</a>. Check it on <a href="https://github.com/arthanzel/evaluatex">Github</a>.</p>
+
+        <h2>Try it!</h2>
+        <p><b>Evaluatex</b> parses ASCII and LaTeX math quickly and safely. Punch in an expression into a textbox and watch as <b>Evaluatex</b> does the heavy math work so you don't have to! It's especially powerful when combined with math markup tools such as <a href="http://mathquill.com/">Mathquill</a>.</p>
+
+        <p>You can use all of the constants defined in Javascript's Math object, such as sin() and PI.</p>
+
+        <h2>ASCII Math</h2>
+        <div class="example">
+            <textarea>sqrt(3^2 + 4^2) + log(100) / log(10)</textarea>
+            <p class="result"></p>
+        </div>
+
+        <div class="example"><!-- clear --></div>
+
+        <h2>Advanced Features</h2>
+        <p>Hit up the <a href="https://github.com/arthanzel/evaluatex/blob/master/README.md">README</a> to see the whole feature-set.</p>
+    </div>
 </body>
 </html>
