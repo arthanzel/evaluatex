@@ -151,7 +151,7 @@ If you try to use parens or square brackets, Evaluatex will complain.
 Error!
 ```
 
-LaTeX thinks that the above expression means `X^'(' * 24)`, which is clearly bogus syntax. When in doubt, always use braces.
+LaTeX thinks that the above expression means `x^'(' * 24)`, which is clearly bogus syntax. When in doubt, always use braces.
 
 One more example:
 
