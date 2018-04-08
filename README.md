@@ -1,5 +1,10 @@
+This npm package is a placeholder for a coming, npm-optimized version of evaluatex.
+
+[arthanzel.github.io/evaluatex](arthanzel.github.io/evaluatex)
+
 Evaluatex
 =========
+
 **Evaluatex** is a parser that reads and evaluates LaTeX and ASCII math. Use in Node, Angular, or with vanilla Javascript on both clients and servers.
 
 **Evaluatex** can safely resolve math without relying Javascript's native `eval()` function. It can also support custom variables and functions, so you can pass in arbitrary values without having to hard-code the math.
