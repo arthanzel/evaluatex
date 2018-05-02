@@ -78,11 +78,11 @@ class Lexer {
      * @returns {Token}
      */
     next(len = undefined) {
+        this.skipWhitespace();
+
         if (!this.hasNext()) {
             throw "Lexer error: reached end of stream";
         }
-
-        this.skipWhitespace();
 
         // Try to match each pattern in tokenPatterns to the remaining buffer
         for (const [type, regex] of Token.patterns) {

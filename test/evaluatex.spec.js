@@ -136,7 +136,7 @@ describe("Evaluatex", function () {
         test("\\frac {4 ^ 2} 32", 32 / 3, {}, {}, { latex: true });
     });
 
-    it.only("supports LaTeX typesetting", function () {
+    it("supports LaTeX typesetting", function () {
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1 / 6, { x: 9 }, {}, { latex: true });
         test("\\sqrt 45", 10, {}, {}, { latex: true });
     });
