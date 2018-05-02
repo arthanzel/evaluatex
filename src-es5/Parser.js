@@ -1,6 +1,6 @@
 var Node = require("./Node");
 var Token = require("./Token");
-var arity = require("../src/util/arity");
+var arity = require("../src/util/arities");
 var replacementTable = require("../src/util/replaceToken");
 
 // Parser

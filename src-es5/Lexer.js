@@ -1,9 +1,4 @@
-var arity = require("../src/util/arity");
-var interpolate = require("./utils/interpolate");
-var tokens = require("./utils/tokens");
-var Token = require("./Token");
 
-var ALT_TOKENS = ["TPOWER", "TCOMMAND"];
 
 // The lexer reads a math expression and breaks it down into easily-digestible "tokens".
 // A string of tokens, such as `NUMBER(4) PLUS NUMBER(2)` can be more easily understood by machines than raw math.
@@ -17,45 +12,40 @@ var Lexer = module.exports = function(buffer, opts) {
     this.lexExpression();
 };
 
-// Returns true if there are more tokens to be read from the buffer.
-Lexer.prototype.hasNext = function() {
-    return this.cursor < this.buffer.length;
-};
-
 // Gets the next token in the stream.
-Lexer.prototype.next = function(len) {
-    if (!this.hasNext()) {
-        throw "Lexer error: reached end of stream.";
-    }
-
-    // Try matching each token in `this.tokenMap`.
-    for (k in tokens) {
-        var match = tokens[k].exec(this.buffer.substr(this.cursor, len));
-
-        // A matching token *must* begin immediately at the cursor, otherwise
-        // it probably appears later in the buffer.
-        if (match && match.index == 0) {
-            this.cursor += match[0].length;
-            return new Token(k, match[0]);
-        }
-    }
-
-    throw interpolate("Lexer error: Can't match token at position %: %.",
-                      this.cursor,
-                      this.buffer.substr(this.cursor, Math.min(len, 10)));
-};
+// Lexer.prototype.next = function(len) {
+//     if (!this.hasNext()) {
+//         throw "Lexer error: reached end of stream.";
+//     }
+//
+//     // Try matching each token in `this.tokenMap`.
+//     for (k in tokens) {
+//         var match = tokens[k].exec(this.buffer.substr(this.cursor, len));
+//
+//         // A matching token *must* begin immediately at the cursor, otherwise
+//         // it probably appears later in the buffer.
+//         if (match && match.index == 0) {
+//             this.cursor += match[0].length;
+//             return new Token(k, match[0]);
+//         }
+//     }
+//
+//     throw interpolate("Lexer error: Can't match token at position %: %.",
+//                       this.cursor,
+//                       this.buffer.substr(this.cursor, Math.min(len, 10)));
+// };
 
 // Returns a token corresponding to the next single *letter* in the buffer,
 // unless the following token is a LaTeX command, in which case the entire command
 // token is returned. This makes it possible to lex LaTeX's stupidities like a^bc
 // evaluating to a^{b}c
-Lexer.prototype.nextSingle = function() {
-    if (this.buffer.charAt(this.cursor) == "\\") {
-        return this.next();
-    }
-    
-    return this.next(1);
-};
+// Lexer.prototype.nextSingle = function() {
+//     if (this.buffer.charAt(this.cursor) == "\\") {
+//         return this.next();
+//     }
+//
+//     return this.next(1);
+// };
 
 // Returns a list of all tokens for this lexer.
 Lexer.prototype.lexExpression = function() {
@@ -81,7 +71,7 @@ Lexer.prototype.lexExpression = function() {
             // Lex arguments of the token
             for (var i = 0; i < nArgs; i++) {
                 this.skipWhitespace();
-                var next = this.nextSingle();
+                var next = this.nextCharToken();
                 if (next.value == "{") {
                     this.tokens.push(next);
                     this.lexExpression();
@@ -97,16 +87,8 @@ Lexer.prototype.lexExpression = function() {
     }
 };
 
-Lexer.prototype.toString = function() {
-    var tokenStrings = [];
-    for (i in this.tokens) {
-        tokenStrings.push(this.tokens[i].toString());
-    }
-    return tokenStrings.join(" ");
-};
-
-Lexer.prototype.skipWhitespace = function() {
-    while (tokens["TWS"].test(this.buffer.charAt(this.cursor))) {
-        this.cursor++;
-    }
-};
+// Lexer.prototype.skipWhitespace = function() {
+//     while (tokens["TWS"].test(this.buffer.charAt(this.cursor))) {
+//         this.cursor++;
+//     }
+// };

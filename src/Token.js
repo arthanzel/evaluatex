@@ -41,8 +41,8 @@ export default class Token {
     static TYPE_NUMBER = "NUMBER";
 
     static patterns = new Map([
-        [Token.TYPE_LPAREN, /\(|\[|{|\\left\(|\\left\[/], // Match (, [, {, \left(, \left[
-        [Token.TYPE_RPAREN, /\)|]|}|\\right\)|\\right]/], // Match ), ], }, \right), \right]
+        [Token.TYPE_LPAREN, /(\(|\[|{|\\left\(|\\left\[)/], // Match (, [, {, \left(, \left[
+        [Token.TYPE_RPAREN, /(\)|]|}|\\right\)|\\right])/], // Match ), ], }, \right), \right]
         [Token.TYPE_PLUS, /\+/],
         [Token.TYPE_MINUS, /-/],
         [Token.TYPE_TIMES, /\*/],

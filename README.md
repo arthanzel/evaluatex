@@ -157,15 +157,15 @@ evaluatex("3.6!")()
 
 You can refer to symbols, such as `x`, in a math expression. These symbols can be **constant** or **variable**.
 
-**Constants** are specified in the call to `evaluatex()` as the second parameter. Their values are compiled by Evaluatex into the resultant equation. Use constants if you know that they won't change between invocations.
+**Constants** are specified in the call to `evaluatex()` as the second parameter. Their values are compiled by Evaluatex into the resultant equation. Use constants if you know that they won't change between invocations. Constants may be numeric values or functions.
 
 ```javascript
-const fn = evaluatex("100 + x", { x: 5 });
+const fn = evaluatex("100 + x + incr(1)", { x: 5, incr: x => x + 1 });
 fn();
-// 105
+// 107
 ```
 
-**Variables** are specified in the output function. Their values can be changed between invocations. If you compile an expression with a variable, you *must* give a value for that variable, otherwise Evaluatex will complain.
+**Variables** are specified in the output function. Their values can be changed between invocations. If you compile an expression with a variable, you *must* give a value for that variable, otherwise Evaluatex will complain. Variables may only be numeric values, and not functions.
 
 ```javascript
 const fn = evaluatex("100 + x");

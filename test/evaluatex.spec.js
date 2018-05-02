@@ -8,6 +8,7 @@ function test(expression, expectedResult, constants = {}, variables = {}, opts =
         assert.closeTo(fn(variables), expectedResult, 1E-6);
     }
     catch (e) {
+        console.log(fn.tokens.toString());
         fn.ast.printTree();
         throw e;
     }
@@ -120,23 +121,23 @@ describe("Evaluatex", function () {
         test("log10 100 ^ 2", 4); // log10(100^2)
     });
 
-    xit("supports parens", function () {
-        test("{1 + [2 - {3 + 4}])", -4);
+    it("supports parens", function () {
+        test("{1 + [2 - {3 + 4}]}", -4);
         test("{1 + \\left[2 - \\left(3 + 4\\right)\\right]}", -4);
     });
 
-    xit("support LaTeX's stupid one-number expressions", function () {
-        test("2^24", 16, {}, { latex: true });
-        test("2^{12}", 4096, {}, { latex: true });
-        test("\\frac 4 2", 2, {}, { latex: true });
-        test("\\frac 4 2 ^ 3", 8, {}, { latex: true });
-        test("\\frac {4 ^ 2} 3", 16 / 3, {}, { latex: true });
-        test("\\frac {(4 ^ 2)} {3}", 16 / 3, {}, { latex: true });
-        test("\\frac {4 ^ 2} 32", 32 / 3, {}, { latex: true });
+    it("support LaTeX's stupid one-number expressions", function () {
+        test("2^24", 16, {}, {}, { latex: true });
+        test("2^{12}", 4096, {}, {}, { latex: true });
+        test("\\frac 4 2", 2, {}, {}, { latex: true });
+        test("\\frac 4 2 ^ 3", 8, {}, {}, { latex: true });
+        test("\\frac {4 ^ 2} 3", 16 / 3, {}, {}, { latex: true });
+        test("\\frac {(4 ^ 2)} {3}", 16 / 3, {}, {}, { latex: true });
+        test("\\frac {4 ^ 2} 32", 32 / 3, {}, {}, { latex: true });
     });
 
-    xit("supports LaTeX typesetting", function () {
-        test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1 / 6, { x: 9 }, { latex: true });
-        test("\\sqrt 45", 10, {}, { latex: true });
+    it.only("supports LaTeX typesetting", function () {
+        test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1 / 6, { x: 9 }, {}, { latex: true });
+        test("\\sqrt 45", 10, {}, {}, { latex: true });
     });
 });

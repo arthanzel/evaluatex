@@ -1,5 +1,6 @@
 import Node from "./Node";
 import Token from "./Token";
+import arities from "./util/arities";
 import { fact } from "./util/localFunctions";
 
 // Parser
@@ -159,6 +160,14 @@ class Parser {
         }
         else if (this.accept(Token.TYPE_NUMBER)) {
             node = new Node(Node.TYPE_NUMBER, parseFloat(this.prevToken.value));
+        }
+        else if (this.accept(Token.TYPE_COMMAND)) {
+            const cmdToken = this.prevToken;
+            node = new Node(Node.TYPE_FUNCTION, cmdToken.value);
+
+            for (let i = 0; i < arities[cmdToken.value.name]; i++) {
+                node.addChild(this.val());
+            }
         }
         else if (this.accept(Token.TYPE_FUNCTION)) {
             node = new Node(Node.TYPE_FUNCTION, this.prevToken.value);
