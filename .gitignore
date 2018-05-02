@@ -1,4 +1,4 @@
-Buildfile
-
 node_modules
 dist
+
+*.log
