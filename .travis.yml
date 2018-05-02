@@ -4,12 +4,20 @@ env:
 install:
   - yarn install
 script:
+  - yarn build
   - yarn test
 deploy:
-  provider: npm
-  skip_cleanup: true
-  email: "$NPM_EMAIL"
-  api_key: "$NPM_API_KEY"
-  on:
-    branch: deploy
-    tags: true
+  - provider: npm
+    skip_cleanup: true
+    email: "$NPM_EMAIL"
+    api_key: "$NPM_API_KEY"
+    on:
+      branch: deploy
+      tags: true
+  - provider: pages
+    skip-cleanup: true
+    github-token: $GITHUB_TOKEN
+    keep-history: false
+    on:
+      branch: deploy
+      verbose: true
