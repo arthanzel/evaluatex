@@ -1,112 +1,86 @@
-var arity = require("./utils/arity");
-var interpolate = require("./utils/interpolate");
-var tokens = require("./utils/tokens");
-var Token = require("./Token");
+import Token from "./Token";
+import { tokenPatterns } from "./Token";
+import localFunctions from "./util/localFunctions";
 
-var ALT_TOKENS = ["TPOWER", "TCOMMAND"];
+/**
+ * The lexer reads a math expression and breaks it down into easily-digestible Tokens.
+ * A list of valid tokens can be found lower in this file.
+ * @param equation (String) The equation to lex.
+ * @param locals (Object) An object of functions and variables.
+ * @returns {Array} An array of Tokens.
+ */
+export default function lexer(equation, locals = {}) {
+    let l = new Lexer(equation, locals);
+    l.lex();
 
-// The lexer reads a math expression and breaks it down into easily-digestible "tokens".
-// A string of tokens, such as `NUMBER(4) PLUS NUMBER(2)` can be more easily understood by machines than raw math.
-var Lexer = module.exports = function(buffer, opts) {
-    this.buffer = buffer;
-    this.cursor = 0;
-    this.opts = opts || {};
-    this.tokens = [];
+    // Convert the array of tokens into a String - useful for testing.
+    l.tokens.toString = function () {
+        let tokenStrings = [];
+        for (let i = 0; i < l.tokens.length; i++) {
+            tokenStrings.push(l.tokens[i].toString());
+        }
+        return tokenStrings.join(" ");
+    };
 
-    // Lex
-    this.lexExpression();
-};
+    return l.tokens;
+}
 
-// Returns true if there are more tokens to be read from the buffer.
-Lexer.prototype.hasNext = function() {
-    return this.cursor < this.buffer.length;
-};
-
-// Gets the next token in the stream.
-Lexer.prototype.next = function(len) {
-    if (!this.hasNext()) {
-        throw "Lexer error: reached end of stream.";
+class Lexer {
+    constructor(buffer, locals) {
+        this.buffer = buffer;
+        this.locals = Object.assign({}, locals, localFunctions);
+        this.cursor = 0;
+        this.tokens = [];
     }
 
-    // Try matching each token in `this.tokenMap`.
-    for (k in tokens) {
-        var match = tokens[k].exec(this.buffer.substr(this.cursor, len));
-
-        // A matching token *must* begin immediately at the cursor, otherwise
-        // it probably appears later in the buffer.
-        if (match && match.index == 0) {
-            this.cursor += match[0].length;
-            return new Token(k, match[0]);
-        }
-    }
-
-    throw interpolate("Lexer error: Can't match token at position %: %.",
-                      this.cursor,
-                      this.buffer.substr(this.cursor, Math.min(len, 10)));
-};
-
-// Returns a token corresponding to the next single *letter* in the buffer,
-// unless the following token is a LaTeX command, in which case the entire command
-// token is returned. This makes it possible to lex LaTeX's stupidities like a^bc
-// evaluating to a^{b}c
-Lexer.prototype.nextSingle = function() {
-    if (this.buffer.charAt(this.cursor) == "\\") {
-        return this.next();
-    }
-    
-    return this.next(1);
-};
-
-// Returns a list of all tokens for this lexer.
-Lexer.prototype.lexExpression = function() {
-    while (this.hasNext()) {
-        var token = this.next();
-        this.tokens.push(token);
-
-        if (token.value == "{") {
-            this.lexExpression();
-        }
-        else if (token.value == "}") {
-            return;
-        }
-
-        // If the current token is one of those that accepts a single-char argument in LaTeX, deal with that accordingly, taking into account arity and left curly braces that change the formatting.
-        else if (this.opts.latex && ALT_TOKENS.indexOf(token.type) != -1) {
-            var nArgs = 1;
-
-            if (token.type == "TCOMMAND") {
-                nArgs = arity[token.value.substring(1).toLowerCase()] || 1;
+    lex() {
+        while (this.hasNext()) {
+            let token = this.next();
+            if (token.type === "TWS") {
+                // Whitespace tokens don't affect evaluation, so don't bother
+                // adding them to the token list.
+                continue;
             }
-
-            // Lex arguments of the token
-            for (var i = 0; i < nArgs; i++) {
-                this.skipWhitespace();
-                var next = this.nextSingle();
-                if (next.value == "{") {
-                    this.tokens.push(next);
-                    this.lexExpression();
+            if (token.type === "TSYMBOL") {
+                // Symbols will need to be looked up during the evaluation phase.
+                // If the symbol refers to things defined in either Math or
+                // the locals, compile them, to prevent slow lookups later.
+                if (typeof this.locals[token.value] === "function") {
+                    token = new Token("TFUNCTION", this.locals[token.value]);
                 }
-                else {
-                    // Surround single-letter arguments with parens to make them more explicit to the parser.
-                    this.tokens.push(new Token("TLPAREN", "{"));
-                    this.tokens.push(next);
-                    this.tokens.push(new Token("TRPAREN", "}"));
+                else if (typeof this.locals[token.value] === "number") {
+                    token = new Token("TNUMBER", this.locals[token.value]);
                 }
             }
+            this.tokens.push(token);
         }
     }
-};
 
-Lexer.prototype.toString = function() {
-    var tokenStrings = [];
-    for (i in this.tokens) {
-        tokenStrings.push(this.tokens[i].toString());
+    hasNext() {
+        return this.cursor < this.buffer.length;
     }
-    return tokenStrings.join(" ");
-};
 
-Lexer.prototype.skipWhitespace = function() {
-    while (tokens["TWS"].test(this.buffer.charAt(this.cursor))) {
-        this.cursor++;
+    // Get the next token from the buffer
+    next() {
+        if (!this.hasNext()) {
+            throw "Lexer error: reached end of stream";
+        }
+
+        // Try to match each pattern in tokenPatterns to the remaining buffer.
+        for (let i of tokenPatterns) {
+            let type = i[0];
+            let regex = i[1];
+
+            // Force the regex to match only at the beginning of the string.
+            regex = new RegExp(/^/.source + regex.source);
+
+            let match = regex.exec(this.buffer.substr(this.cursor));
+            if (match) {
+                this.cursor += match[0].length;
+                return new Token(type, match[0]);
+            }
+        }
+
+        throw "Lexer error: can't match any token";
     }
-};
+}
