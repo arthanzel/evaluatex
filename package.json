@@ -1,6 +1,6 @@
 {
     "name": "evaluatex",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "An ASCII and LaTeX math parser and evaluator",
     "main": "index.js",
     "repository": "https://github.com/arthanzel/evaluatex.git",
@@ -22,6 +22,9 @@
         "babel-preset-stage-2": "^6.24.1"
     },
     "babel": {
-        "presets": ["env", "stage-2"]
+        "presets": [
+            "env",
+            "stage-2"
+        ]
     }
 }
