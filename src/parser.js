@@ -1,4 +1,5 @@
 import Node from "./Node";
+import Token from "./Token";
 import { fact } from "./util/localFunctions";
 
 // Parser
@@ -44,10 +45,10 @@ class Parser {
     }
 
     //preprocess() {
-        // This function used to contain procedures to remove whitespace
-        // tokens and replace symbol tokens with functions, but that work
-        // has been moved to the lexer in order to keep the parser more
-        // lightweight.
+    // This function used to contain procedures to remove whitespace
+    // tokens and replace symbol tokens with functions, but that work
+    // has been moved to the lexer in order to keep the parser more
+    // lightweight.
     //}
 
     /**
@@ -74,7 +75,7 @@ class Parser {
     expect(type) {
         if (!this.accept(type)) {
             throw "Expected " + type + " but got " +
-            (this.currentToken ? this.currentToken.value : "end of input.");
+            (this.currentToken ? this.currentToken.toString() : "end of input.");
         }
     }
 
@@ -85,16 +86,16 @@ class Parser {
      * Parses a math expression with
      */
     sum() {
-        let node = new Node("SUM");
+        let node = new Node(Node.TYPE_SUM);
         node.addChild(this.product());
 
         while (true) {
             // Continue to accept chained addends
-            if (this.accept("TPLUS")) {
+            if (this.accept(Token.TYPE_PLUS)) {
                 node.addChild(this.product());
             }
-            else if (this.accept("TMINUS")) {
-                node.addChild(new Node("NEGATE").addChild(this.product()));
+            else if (this.accept(Token.TYPE_MINUS)) {
+                node.addChild(new Node(Node.TYPE_NEGATE).addChild(this.product()));
             }
             else {
                 break;
@@ -105,25 +106,25 @@ class Parser {
     }
 
     product() {
-        let node = new Node("PRODUCT");
+        let node = new Node(Node.TYPE_PRODUCT);
         node.addChild(this.power());
 
         while (true) {
             // Continue to accept chained multiplicands
 
-            if (this.accept("TTIMES")) {
+            if (this.accept(Token.TYPE_TIMES)) {
                 node.addChild(this.power());
             }
-            else if (this.accept("TDIVIDE")) {
-                node.addChild(new Node("INVERSE").addChild(this.power()));
+            else if (this.accept(Token.TYPE_DIVIDE)) {
+                node.addChild(new Node(Node.TYPE_INVERSE).addChild(this.power()));
             }
-            else if (this.accept("TLPAREN")) {
+            else if (this.accept(Token.TYPE_LPAREN)) {
                 this.cursor--;
                 node.addChild(this.power());
             }
-            else if (this.accept("TSYMBOL") ||
-                     this.accept("TNUMBER") ||
-                     this.accept("TFUNCTION")) {
+            else if (this.accept(Token.TYPE_SYMBOL) ||
+                this.accept(Token.TYPE_NUMBER) ||
+                this.accept(Token.TYPE_FUNCTION)) {
                 this.cursor--;
                 node.addChild(this.power());
             }
@@ -136,12 +137,12 @@ class Parser {
     }
 
     power() {
-        let node = new Node("POWER");
+        let node = new Node(Node.TYPE_POWER);
         node.addChild(this.val());
 
         // If a chained power is encountered (e.g. a ^ b ^ c), treat it like
         // a ^ (b ^ c)
-        if (this.accept("TPOWER")) {
+        if (this.accept(Token.TYPE_POWER)) {
             node.addChild(this.power());
         }
 
@@ -153,24 +154,24 @@ class Parser {
         // operators like factorials, which come after a value.
         let node = {};
 
-        if (this.accept("TSYMBOL")) {
-            node = new Node("SYMBOL", this.prevToken.value);
+        if (this.accept(Token.TYPE_SYMBOL)) {
+            node = new Node(Node.TYPE_SYMBOL, this.prevToken.value);
         }
-        else if (this.accept("TNUMBER")) {
-            node = new Node("NUMBER", parseFloat(this.prevToken.value));
+        else if (this.accept(Token.TYPE_NUMBER)) {
+            node = new Node(Node.TYPE_NUMBER, parseFloat(this.prevToken.value));
         }
-        else if (this.accept("TFUNCTION")) {
-            node = new Node("FUNCTION", this.prevToken.value);
+        else if (this.accept(Token.TYPE_FUNCTION)) {
+            node = new Node(Node.TYPE_FUNCTION, this.prevToken.value);
 
             // Multi-param functions require parens and have commas
-            if (this.accept("TLPAREN")) {
+            if (this.accept(Token.TYPE_LPAREN)) {
                 node.addChild(this.sum());
 
-                while (this.accept("TCOMMA")) {
+                while (this.accept(Token.TYPE_COMMA)) {
                     node.addChild(this.sum());
                 }
 
-                this.expect("TRPAREN");
+                this.expect(Token.TYPE_RPAREN);
             }
 
             // Single-parameter functions don't need parens
@@ -178,24 +179,24 @@ class Parser {
                 node.addChild(this.power());
             }
         }
-        else if (this.accept("TMINUS")) {
-            node = new Node("NEGATE").addChild(this.power());
+        else if (this.accept(Token.TYPE_MINUS)) {
+            node = new Node(Node.TYPE_NEGATE).addChild(this.power());
         }
-        else if (this.accept("TLPAREN")) {
+        else if (this.accept(Token.TYPE_LPAREN)) {
             node = this.sum();
-            this.expect("TRPAREN");
+            this.expect(Token.TYPE_RPAREN);
         }
-        else if (this.accept("TABS")) {
-            node = new Node("FUNCTION", Math.abs);
+        else if (this.accept(Token.TYPE_ABS)) {
+            node = new Node(Node.TYPE_FUNCTION, Math.abs);
             node.addChild(this.sum());
-            this.expect("TABS");
+            this.expect(Token.TYPE_ABS);
         }
         else {
-            throw "Unexpected " + this.currentToken.type + ", token " + this.cursor;
+            throw "Unexpected " + this.currentToken.toString() + " at token " + this.cursor;
         }
 
-        if (this.accept("TBANG")) {
-            let factNode = new Node("FUNCTION", fact);
+        if (this.accept(Token.TYPE_BANG)) {
+            let factNode = new Node(Node.TYPE_FUNCTION, fact);
             factNode.addChild(node);
             return factNode;
         }
@@ -233,37 +234,35 @@ class Parser {
 
 // Parses values or nested expressions.
 //Parser.prototype.val = function() {
-    // Don't return new nodes immediately, since we need to parse
-    // factorials, which come at the END of values.
-    //var node = {};
+// Don't return new nodes immediately, since we need to parse
+// factorials, which come at the END of values.
+//var node = {};
 
 
+// Parse negative values like -42.
+// The lexer can't differentiate between a difference and a negative,
+// so that distinction is done here.
+// Notice the `power()` rule that comes after a negative sign so that
+// expressions like `-4^2` return -16 instead of 16.
 
 
-    // Parse negative values like -42.
-    // The lexer can't differentiate between a difference and a negative,
-    // so that distinction is done here.
-    // Notice the `power()` rule that comes after a negative sign so that
-    // expressions like `-4^2` return -16 instead of 16.
+// Parse nested expression with parentheses.
+// Notice that the parser expects an RPAREN token after the expression.
 
 
-    // Parse nested expression with parentheses.
-    // Notice that the parser expects an RPAREN token after the expression.
+// Parse absolute value.
+// Absolute values are contained in pipes (`|`) and are treated quite
+// like parens.
 
 
-    // Parse absolute value.
-    // Absolute values are contained in pipes (`|`) and are treated quite
-    // like parens.
+// All parsing rules should have terminated or recursed by now.
+// Throw an exception if this is not the case.
 
 
-    // All parsing rules should have terminated or recursed by now.
-    // Throw an exception if this is not the case.
+// Process postfix operations like factorials.
+
+// Parse factorial.
 
 
-    // Process postfix operations like factorials.
-
-    // Parse factorial.
-
-
-    //return node;
+//return node;
 //};

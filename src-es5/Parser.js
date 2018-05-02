@@ -1,7 +1,7 @@
 var Node = require("./Node");
 var Token = require("./Token");
-var arity = require("./utils/arity");
-var replacementTable = require("./utils/replacementTable");
+var arity = require("../src/util/arity");
+var replacementTable = require("../src/util/replaceToken");
 
 // Parser
 // ======
@@ -11,7 +11,7 @@ var replacementTable = require("./utils/replacementTable");
 // correct order of operations.
 // This is a simple recursive-descent parser based on [Wikipedia's example](https://en.wikipedia.org/wiki/Recursive_descent_parser).
 var Parser = module.exports = function(tokens, locals) {
-    this.locals = locals || {};
+    this.constants = locals || {};
     this.tokens = [];
     this.cursor = 0;
 

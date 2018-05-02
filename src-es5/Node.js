@@ -1,5 +1,5 @@
 var interpolate = require("./utils/interpolate");
-var isNumber = require("./utils/isNumber");
+var isNumber = require("../src/util/isNumber");
 
 // Nodes that are allowed to have only one child. Nodes that have one child and are not in this list will be simplified during parsing.
 var UNARY_NODES = ["FACTORIAL", "FUNCTION", "INVERSE", "NEGATE"];

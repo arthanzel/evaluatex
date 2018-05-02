@@ -1,6 +1,3 @@
-// Nodes that are allowed to have only one child. Nodes that have one child and are not in this list will be simplified during parsing.
-let UNARY_NODES = ["FACTORIAL", "FUNCTION", "INVERSE", "NEGATE"];
-
 /**
  * Node represents a node in an abstract syntax tree. Nodes have the following properties:
  *  - A type, which determines how it is evaluated;
@@ -34,49 +31,38 @@ export default class Node {
     /**
      * Evaluates this Node and all child nodes recursively, returning the numerical result of this Node.
      */
-    evaluate(locals) {
+    evaluate(vars) {
         let result = 0;
 
         switch (this.type) {
-            case "FUNCTION":
-                let evaluatedChildren = [];
-                for (let i in this.children) {
-                    evaluatedChildren.push(this.children[i].evaluate(locals));
-                }
+            case Node.TYPE_FUNCTION:
+                const evaluatedChildren = this.children.map(childNode => childNode.evaluate(vars));
                 result = this.value.apply(this, evaluatedChildren);
                 break;
-            case "INVERSE":
-                result = 1.0 / this.child.evaluate(locals);
+            case Node.TYPE_INVERSE:
+                result = 1.0 / this.child.evaluate(vars);
                 break;
-            case "NEGATE":
-                result = -this.child.evaluate(locals);
+            case Node.TYPE_NEGATE:
+                result = -this.child.evaluate(vars);
                 break;
-            case "NUMBER":
+            case Node.TYPE_NUMBER:
                 result = this.value;
                 break;
-            case "POWER":
+            case Node.TYPE_POWER:
                 result = Math.pow(
-                    this.children[0].evaluate(locals),
-                    this.children[1].evaluate(locals)
+                    this.children[0].evaluate(vars),
+                    this.children[1].evaluate(vars)
                 );
                 break;
-            case "PRODUCT":
-                let product = 1;
-                for (let i in this.children) {
-                    product *= this.children[i].evaluate(locals);
-                }
-                result = product;
+            case Node.TYPE_PRODUCT:
+                result = this.children.reduce((product, child) => product * child.evaluate(vars), 1);
                 break;
-            case "SUM":
-                let sum = 0;
-                for (let i in this.children) {
-                    sum += this.children[i].evaluate(locals);
-                }
-                result = sum;
+            case Node.TYPE_SUM:
+                result = this.children.reduce((sum, child) => sum + child.evaluate(vars), 0);
                 break;
-            case "SYMBOL":
-                if (isFinite(locals[this.value])) {
-                    return locals[this.value];
+            case Node.TYPE_SYMBOL:
+                if (isFinite(vars[this.value])) {
+                    return vars[this.value];
                 }
                 throw "Symbol " + this.value + " is undefined or not a number";
         }
@@ -147,12 +133,15 @@ export default class Node {
         let val = typeof this.value === "function" ? this.value.name : this.value;
         return `${ this.children.length } ${ this.type } [${ val }]`;
     }
+
+    static TYPE_FUNCTION = "FUNCTION";
+    static TYPE_INVERSE = "INVERSE";
+    static TYPE_NEGATE = "NEGATE";
+    static TYPE_NUMBER = "NUMBER";
+    static TYPE_POWER = "POWER";
+    static TYPE_PRODUCT = "PRODUCT";
+    static TYPE_SUM = "SUM";
+    static TYPE_SYMBOL = "SYMBOL";
 }
 
-/*
-// Simplifies this Node and all children recursively, returning a new
-// node tree.
-Node.prototype.simplify = function() {
-
-};
-*/
+const UNARY_NODES = ["FACTORIAL", "FUNCTION", "INVERSE", "NEGATE"];

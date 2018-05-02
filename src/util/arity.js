@@ -1,5 +1,9 @@
 // List of arities for LaTeX commands. Since LaTeX command arguments aren't delimited by parens, we'll cheat a bit and provide a bit of context to the parser about how to parse each command.
-module.exports = {
+
+/**
+ * List of arities for LaTeX commands. Arguments for LaTeX commands aren't delimited by parens, so the compiler needs to know how many arguments to expect for each function.
+ */
+export default {
     "frac": 2,
     "sqrt": 1,
     "sin": 1,

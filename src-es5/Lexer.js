@@ -1,4 +1,4 @@
-var arity = require("./utils/arity");
+var arity = require("../src/util/arity");
 var interpolate = require("./utils/interpolate");
 var tokens = require("./utils/tokens");
 var Token = require("./Token");
