@@ -1,0 +1,15 @@
+language: node_js
+node_js: node
+env:
+install:
+  - yarn install
+script:
+  - yarn test
+deploy:
+  provider: npm
+  skip_cleanup: true
+  email: "$NPM_EMAIL"
+  api_key: "$NPM_API_KEY"
+  on:
+    branch: deploy
+    tags: true
