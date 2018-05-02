@@ -1,7 +1,3 @@
-This npm package is a placeholder for a coming, npm-optimized version of evaluatex.
-
-[arthanzel.github.io/evaluatex](arthanzel.github.io/evaluatex)
-
 Evaluatex
 =========
 
@@ -14,145 +10,202 @@ Evaluatex
 Installation
 -----
 ```bash
-$ npm install evaluatex # (coming soon!)
-$ bower install evaluatex # (coming soon!)
+npm install evaluatex
+# or
+yarn install/add evaluatex
 ```
 
 ```javascript
-// Node.js
-var Evaluatex  = require("evaluatex");
-
-// Angular V1
-angular.module("myModule", ["evaluatex"])
-.service("MyService", function(Evaluatex) {});
-```
-
-```html
-<!-- Vanilla JS -->
-<script src="evaluatex.js"></script>
-<script type="text/javascript">
-	console.log(Evaluatex);
-</script>
+const evaluatex = require("evaluatex");
+// or
+import evaluatex from "evaluatex";
 ```
 
 Building
 --------
-`npm` test will run a set of unit tests defined in `./test/evaluatex.spec.js`. These tests run in Node, and not in any browser runtime.
+Get [yarn](https://yarnpkg.com/en/) and do `yarn install`.
 
-`npm run compile` will build the full script to `./evalulatex.js`. You can include this in your HTML files.
+`yarn build` transpiles ES6 sources to `dist/`.
 
-Usage
------
+`yarn test` runs tests in the `test/` directory.
+
+API
+---
 ```javascript
-> Evaluatex.evaluate("1 + 2 * 3 ^ 4")
-163
-> Evaluatex.evaluate("sin(0.5PI) + magic", { magic: 3 })
-4
+const fn = evaluatex(expression, constants = {}, options = {});
+const result = fn(variables = {});
 ```
 
-Features
---------
-By default, Evaluatex acts in ASCII mode. To use LaTeX-specific behaviour, pass in `{ latex: true }` as the **third** argument to `Evaluatex.evaluate`. Read on to learn more.
+- `evaluatex()` compiles a text math expression into a function `fn`.
+    - `expression` is an ASCII or LaTeX expression to be parsed and evaluated.
+    - `constants` is a map of constant values - values that don't change if you invoke `fn` more than once.
+    - `options` is a map of options for the compiler.
+- `result` is the numerical result of the calculation.
+    - `variables` is a map of variables that *can* change between invocations.
+
+Features and usage
+------------------
+Evaluatex compiles a string into a Javascript function that you can invoke anytime. It's like calling `eval()`, but without the [evil](http://linterrors.com/js/eval-is-evil).
+
+```javascript
+const fn = evaluatex("1 + 2 * 3 ^ 4")
+fn()
+// 163
+```
+
+A one-liner:
+
+```javascript
+const result = evaluatex("1 + 2 * 3 ^ 4")()
+// result = 163
+```
+
+Evaluatex returns a function because you can then invoke it multiple times with different variables.
+
+```javascript
+fn2 = evaluatex("1 + magic")
+fn2({ magic: 3 })
+// 4
+fn2({ magic: 99 })
+// 100
+```
+
+### Evaluatex is a calculator
 
 Evaluatex supports all of the features you should expect from a simple calculator, including order of operations. Exponents use the `^` operator.
 
 ```javascript
-> Evaluatex.evaluate("1 + 2 * 3 ^ 4")
-163
+evaluatex("1 + 2 * 3 ^ 4")()
+// 163
 ```
 
-You can use variables in expressions that are visible to the expression only:
+You can use named values in expressions that are visible to the expression only. This avoids the need for `eval`. See the *Constants and variables* section for more.
 
 ```javascript
-> Evaluatex.evaluate("1 + a / b", { a: 3, b: 4 })
-1.75
+evaluatex("1 + a / b", { a: 3, b: 4 })()
+// 1.75
 ```
 
-Implicit multiplication with parens or variables is not a problem.
+Implicit multiplication with brackets or variables is not a problem.
 
 ```javascript
-> Evaluatex.evaluate("4a(1+b)", { a: 3, b: 4 })
-60
+evaluatex("4a(1 + b)", { a: 3, b: 4 })()
+// 60
 ```
 
 You have full access to Javascript's `Math` object, including all functions and constants.
 
 ```javascript
-> Evaluatex.evaluate("sin(0.5PI) + magic", { magic: 3 })
-4
+evaluatex("sin(0.5PI) + magic", { magic: 3 })()
+// 4
 ```
 
-You can omit parens from simple functions, but be careful with implicit multiplication.
+You can omit brackets from simple functions, but be careful with implicit multiplication.
 ```javascript
-> Evaluatex.evaluate("sin 2PI") // Interpreted as sin(2) * PI
-2.8566
-> Evaluatex.evaluate("sin PI^2") // Interpreted as sin(PI^2)
--0.43
+evaluatex("sin 2PI")() // Interpreted as sin(2) * PI
+// 2.8566
+evaluatex("sin PI^2")() // Interpreted as sin(PI^2)
+// -0.43
 ```
 
-> There is no globally-accepted standard for treating coefficients inside paren-less functions. Whenever in doubt, use parentheses.
+> There is no universally-accepted standard for treating coefficients inside paren-less functions. Whenever in doubt, use parentheses.
+
+## Custom functions
 
 You can even define custom functions.
 
 ```javascript
-> Evaluatex.evaluate("incr(4)", { incr: function(x) { return x + 1; } })
-5
+evaluatex("incr(4)", { incr: function(x) { return x + 1; } })()
+// 5
 ```
 
 Multi-argument functions work just as well, but you need to include parentheses.
 
 ```javascript
-> Evaluatex.evaluate("hypot(3, 4)")
-5
-> Evaluatex.evaluate("min(5,4,3,2,1)")
-1
+evaluatex("hypot(3, 4)")()
+// 5
+evaluatex("min(5, 4, 3, 2, 1)")()
+// 1
 ```
 
 There's even functions built right in to Evaluatex to help with logs, roots, and trig:
 
 ```javascript
-> Evaluatex.evaluate("logn(81, 3)")
-4
-> Evaluatex.evaluate("rootn(8, 3)")
-2
-> Evaluatex.evaluate("csc(0.25PI)")
-1.414
+evaluatex("logn(81, 3)")()
+// 4
+evaluatex("rootn(8, 3)")()
+// 2
+evaluatex("csc(0.25PI)")()
+// 1.414
 ```
 
 Absolute values work like a charm...
 
 ```javascript
-> Evaluatex.evaluate("|5 - 20|")
-15
+evaluatex("|5 - 20|")()
+// 15
 ```
 
 ...as do factorials, which round to the nearest integer before performing the calculation:
 
 ```javascript
-> Evaluatex.evaluate("3.6!")
-24
+evaluatex("3.6!")()
+// 24
 ```
+
+### Constants and variables
+
+You can refer to symbols, such as `x`, in a math expression. These symbols can be **constant** or **variable**.
+
+**Constants** are specified in the call to `evaluatex()` as the second parameter. Their values are compiled by Evaluatex into the resultant equation. Use constants if you know that they won't change between invocations.
+
+```javascript
+const fn = evaluatex("100 + x", { x: 5 });
+fn();
+// 105
+```
+
+**Variables** are specified in the output function. Their values can be changed between invocations. If you compile an expression with a variable, you *must* give a value for that variable, otherwise Evaluatex will complain.
+
+```javascript
+const fn = evaluatex("100 + x");
+fn({ x: 5 }); // 105
+fn({ x: 6 }); // 106
+```
+
+You can combine constants and variables. Do note that constants have priority over variables - if you define a constant, you can't change it without re-compiling the equation.
+
+```javascript
+const fn = evaluatex("x + y", { x: 100 });
+fn({ y: 5 }); // 105
+fn({ x: 0, y: 6 }); // 106
+```
+
+### Constants and variables: performance notes
+Using a variable requires looking up the variable every time that it is used. This is a little slow. If a variable doesn't change, prefer constants.
+
+If you use a constant and need to change it, you need to call `evaluatex()` again to re-compile the math expression. This is **really** slow. If there's a chance that a constant may change (e.g. user input), prefer variables.
 
 LaTeX-specific behaviour
 ------------------------
 Turn on LaTeX idiosyncrasies with `{ latex: true }` in the third parameter:
 
 ```javascript
-> Evaluatex.evaluate("x^24", { x: 2 }, { latex: true })
-16
+evaluatex("x^24", { x: 2 }, { latex: true })()
+// 16
 ```
 
 The previous example is evaluated as x^(2) * 4, since LaTeX often takes only the first digit of a number for such operations. Use curly braces (`{` and `}`) to fix that:
 
 ```javascript
-> Evaluatex.evaluate("x^{24}", { x: 2 }, { latex: true })
-16777216
+evaluatex("x^{24}", { x: 2 }, { latex: true })()
+// 16777216
 ```
 
 If you try to use parens or square brackets, Evaluatex will complain.
 
 ```javascript
-> Evaluatex.evaluate("x^(24)", { x: 2 }, { latex: true })
+evaluatex("x^(24)", { x: 2 }, { latex: true })
 Error!
 ```
 
@@ -161,6 +214,6 @@ LaTeX thinks that the above expression means `x^'(' * 24)`, which is clearly bog
 One more example:
 
 ```javascript
-> Evaluatex.evaluate("\\frac 123") // Interpreted as (1/2) * 3
+evaluatex("\\frac 123") // Interpreted as (1/2) * 3
 1.5
 ```
