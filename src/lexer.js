@@ -47,10 +47,9 @@ class Lexer {
     lexExpression(charMode = false) {
         while (this.hasNext()) {
             let token = charMode ? this.nextCharToken() : this.next();
+            this.tokens.push(token);
 
             if (this.opts.latex && isCharArgToken(token)) {
-                this.tokens.push(token);
-
                 let arity = 1;
                 if (token.type === Token.TYPE_COMMAND) {
                     arity = arities[token.value.substr(1).toLowerCase()];
@@ -58,30 +57,13 @@ class Lexer {
                 for (let i = 0; i < arity; i++) {
                     this.lexExpression(true);
                 }
-
-                if (charMode) return;
-            }
-            else if (charMode && isStartGroupToken(token)) {
-                this.tokens.push(token);
-                this.lexExpression(false);
-                return;
-            }
-            else if (charMode && !isStartGroupToken(token)) {
-                // this.tokens.push(new Token(Token.TYPE_LPAREN, "{"));
-                this.tokens.push(token);
-                // this.tokens.push(new Token(Token.TYPE_RPAREN, "}"));
-                return;
             }
             else if (isStartGroupToken(token)) {
-                this.tokens.push(token);
                 this.lexExpression(false);
             }
-            else if (isEndGroupToken(token)) {
-                this.tokens.push(token);
+
+            if (charMode || isEndGroupToken(token)) {
                 return;
-            }
-            else {
-                this.tokens.push(token);
             }
         }
     }
