@@ -271,12 +271,12 @@ const result = fn(variables = {});</pre>
     <ul>
         <li><code>evaluatex()</code> compiles a math expression into a function <code>fn</code>.</li>
         <li><code>expression</code> is an ASCII or LaTeX expression to be parsed and evaluated.</li>
-        <li>constants is a map of constant values - values that don't change if you invoke <code>fn</code> more than
+        <li><code>constants</code> is a map of constant values - values that don't change if you invoke <code>fn</code> more than
             once.
         </li>
-        <li>options is a map of options for the compiler.</li>
-        <li>result is the numerical result of the calculation.</li>
-        <li>variables is a map of variables that <em>can</em> change between invocations of <code>fn</code>.</li>
+        <li><code>options</code> is a map of options for the compiler.</li>
+        <li><code>result</code> is the numerical result of the calculation.</li>
+        <li><code>variables</code> is a map of variables that <em>can</em> change between invocations of <code>fn</code>.</li>
     </ul>
 
     <h2>Demo</h2>
@@ -291,6 +291,7 @@ const result = fn(variables = {});</pre>
     <!-- Introduction -->
     <p><b>Evaluatex</b> takes a string containing a math expression and returns a <em>compiled function</em>. The
         compiled function evaluates the math and returns the result.</p>
+    <p>Throughout this manual, you may change the underlined math in any of the examples to explore how <b>Evaluatex</b> works.</p>
     <div class="example">1 + 2 * 3 / 4</div>
     <p>A one-liner:</p>
     <code>const result = evaluatex("1 + 2 * 3 / 4")()</code>
@@ -308,7 +309,7 @@ const result = fn(variables = {});</pre>
 
     <!-- Basics -->
     <h3>Evaluatex is a calculator</h3>
-    <p>Evaluatex supports all of the features you should expect from a single calculator, including order of operations. You can use parentheses, square brackets, or curly braces interchangeably.
+    <p>Evaluatex supports all of the features you should expect from a simple calculator, including order of operations. You can use parentheses, square brackets, or curly braces interchangeably.
         Exponents use the <code>^</code> operator.</p>
     <div class="example">(1 + 2) * [3 ^ 4] - {5 + 6}</div>
 
@@ -366,10 +367,13 @@ const result = fn(variables = {});</pre>
     <div class="example" data-constants="{ x: 2 }" data-options="{ latex: true }">x^24</div>
     <p>In the previous example, the power takes only the first symbol after it, so it reads like <code>x^2 * 4</code>. Use curly braces to fix that.</p>
     <div class="example" data-constants="{ x: 2 }" data-options="{ latex: true }">x^{24}</div>
-    <p>If you try to use parens or square brackets instead, you'll get an error.</p>
-    <div class="example" data-constants="{ x: 2 }" data-options="{ latex: true }">x^(24)</div>
+    <!--<p>If you try to use parens or square brackets instead, you'll get an error.</p>
+    <div class="example" data-constants="{ x: 2 }" data-options="{ latex: true }">x^(24)</div>-->
     <p>LaTeX commands are also supported, like <code>\frac</code>. The following example is interpreted as <code>1 / 20 * 3</code>.</p>
     <div class="example" data-options="{ latex: true }">\\frac 1{20}3</div>
+
+    <h2>Issues</h2>
+    <p>Report issues on <a href="https://github.com/arthanzel/evaluatex" target="_blank">Github</a>. <b>Evaluatex</b> does its best to be correct, but unanticipated <s>bugs</s> features might exist.</p>
 
     <h2>License</h2>
     <p><b>Evaluatex</b> is licensed under the MIT license. This means that you can probably use it in your project, as long as you don't pass it off as your own or blame the author for the inevitable heat death of the universe.</p>
