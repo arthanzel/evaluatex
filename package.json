@@ -1,6 +1,6 @@
 {
     "name": "evaluatex",
-    "version": "2.0.4",
+    "version": "2.1.0",
     "description": "An ASCII and LaTeX math parser and evaluator",
     "main": "index.js",
     "repository": "https://github.com/arthanzel/evaluatex.git",
@@ -8,7 +8,7 @@
     "license": "MIT",
     "private": false,
     "scripts": {
-        "build": "babel -d dist src",
+        "build": "babel -d dist src && webpack dist/minifier.js -o dist/evaluatex.min.js",
         "test": "mocha --require babel-register"
     },
     "files": [
@@ -21,7 +21,9 @@
         "babel-preset-stage-2": "^6.24.1",
         "babel-register": "^6.26.0",
         "chai": "^4.1.2",
-        "mocha": "^5.1.1"
+        "mocha": "^5.1.1",
+        "webpack": "^4.6.0",
+        "webpack-cli": "^2.1.2"
     },
     "dependencies": {},
     "babel": {
