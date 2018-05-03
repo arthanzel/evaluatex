@@ -20,5 +20,4 @@ deploy:
     keep-history: false
     on:
       branch: deploy
-      tags: true
       verbose: true
