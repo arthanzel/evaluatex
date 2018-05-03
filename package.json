@@ -8,12 +8,13 @@
     "license": "MIT",
     "private": false,
     "scripts": {
-        "build": "babel -d dist src && webpack dist/minifier.js -o dist/evaluatex.min.js",
+        "build": "babel -d dist src && webpack dist/minifier.js -o evaluatex.min.js",
         "test": "mocha --require babel-register"
     },
     "files": [
         "index.js",
-        "dist"
+        "dist",
+        "evaluatex.min.js"
     ],
     "devDependencies": {
         "babel-cli": "^6.26.0",
