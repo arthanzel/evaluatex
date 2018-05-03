@@ -1,6 +1,6 @@
 {
     "name": "evaluatex",
-    "version": "2.1.2",
+    "version": "2.1.3",
     "description": "An ASCII and LaTeX math parser and evaluator",
     "main": "index.js",
     "repository": "https://github.com/arthanzel/evaluatex.git",
