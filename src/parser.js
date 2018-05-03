@@ -164,13 +164,15 @@ class Parser {
         else if (this.accept(Token.TYPE_COMMAND)) {
             const cmdToken = this.prevToken;
             node = new Node(Node.TYPE_FUNCTION, cmdToken.value);
+            node.name = cmdToken.name;
 
-            for (let i = 0; i < arities[cmdToken.value.name]; i++) {
+            for (let i = 0; i < arities[cmdToken.name]; i++) {
                 node.addChild(this.val());
             }
         }
         else if (this.accept(Token.TYPE_FUNCTION)) {
             node = new Node(Node.TYPE_FUNCTION, this.prevToken.value);
+            node.name = this.prevToken.name;
 
             // Multi-param functions require parens and have commas
             if (this.accept(Token.TYPE_LPAREN)) {

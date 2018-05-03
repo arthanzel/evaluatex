@@ -7,6 +7,7 @@ export default class Token {
     constructor(type, value = "") {
         this.type = type;
         this.value = value;
+        this.name = null; // Used in function and command tokens to retain the fn name when minified
     }
 
     equals(token) {
@@ -19,10 +20,9 @@ export default class Token {
             return this.type;
         }
 
-        // Does the value contain a function? If so, print a human-readable name.
-        let value = typeof this.value === "function" ? this.value.name : this.value;
+        const val = typeof this.value === "function" ? this.name : this.value;
 
-        return `${ this.type }[${ value }]`;
+        return `${ this.type }[${ val }]`;
     }
 
     static TYPE_LPAREN = "LPAREN";
@@ -48,7 +48,7 @@ export default class Token {
         [Token.TYPE_TIMES, /\*/],
         [Token.TYPE_DIVIDE, /\//],
         [Token.TYPE_COMMAND, /\\[A-Za-z]+/],
-        [Token.TYPE_SYMBOL, /[A-Za-z][A-Za-z0-9]*/],
+        [Token.TYPE_SYMBOL, /[A-Za-z_][A-Za-z_0-9]*/],
         [Token.TYPE_WHITESPACE, /\s+/], // Whitespace
         [Token.TYPE_ABS, /\|/],
         [Token.TYPE_BANG, /!/],

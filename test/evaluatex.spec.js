@@ -138,6 +138,10 @@ describe("Evaluatex", function () {
 
     it("supports LaTeX typesetting", function () {
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1 / 6, { x: 9 }, {}, { latex: true });
+        test("\\frac 1{20}3", 3/20, {}, {}, { latex: true });
         test("\\sqrt 45", 10, {}, {}, { latex: true });
+
+       const  fn = evaluatex("\\frac 1{20}3", {}, { latex: true });
+        fn;
     });
 });

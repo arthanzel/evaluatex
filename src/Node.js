@@ -8,6 +8,7 @@ export default class Node {
     constructor(type, value = "") {
         this.type = type;
         this.value = value;
+        this.name = null; // Used in function and command nodes to retain the fn name when minified
         this.children = [];
     }
 
@@ -130,7 +131,7 @@ export default class Node {
     }
 
     toString() {
-        let val = typeof this.value === "function" ? this.value.name : this.value;
+        const val = typeof this.value === "function" ? this.name : this.value;
         return `${ this.children.length } ${ this.type } [${ val }]`;
     }
 

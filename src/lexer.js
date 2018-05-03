@@ -115,25 +115,27 @@ class Lexer {
     replaceCommands() {
         for (const token of this.tokens) {
             if (token.type === Token.TYPE_COMMAND) {
-                const fnName = token.value.substr(1).toLowerCase();
-                token.value = this.constants[fnName];
+                token.value = token.value.substr(1).toLowerCase();
+                token.name = token.value; // Save name of function for debugging later
+                token.value = this.constants[token.name];
             }
         }
     }
 
     replaceConstants() {
-        for (const i in this.tokens) {
-            const token = this.tokens[i];
-
+        for (const token of this.tokens) {
             if (token.type === Token.TYPE_SYMBOL) {
                 // Symbols will need to be looked up during the evaluation phase.
                 // If the symbol refers to things defined in either Math or
                 // the locals, compile them, to prevent slow lookups later.
                 if (typeof this.constants[token.value] === "function") {
-                    this.tokens[i] = new Token(Token.TYPE_FUNCTION, this.constants[token.value]);
+                    token.type = Token.TYPE_FUNCTION;
+                    token.name = token.value; // Save name of function for debugging later
+                    token.value = this.constants[token.value];
                 }
                 else if (typeof this.constants[token.value] === "number") {
-                    this.tokens[i] = new Token(Token.TYPE_NUMBER, this.constants[token.value]);
+                    token.type = Token.TYPE_NUMBER;
+                    token.value = token.fn = this.constants[token.value];
                 }
             }
         }

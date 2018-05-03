@@ -18,29 +18,73 @@
         }
 
         p {
-            line-height: 160%;
+            line-height: 150%;
         }
 
         a {
+            border-bottom: 1px dotted #d35;
             color: #d35;
             text-decoration: none;
         }
-        a:hover { text-decoration: underline; }
 
-        code, .code , pre{
-            background: white;
-            border: 1px solid #d35;
+        code, pre {
+            background: #e8e8e8;
+            color: #d35;
             display: block;
-            font: 14px monospace;
-            padding: 5px 7px;
+            font-size: 0.95em;
+            margin: 10px 0;
+            padding: 3px 7px;
+            white-space: pre-wrap;
+            white-space: -moz-pre-wrap;
+            white-space: -o-pre-wrap;
+            word-wrap: break-word;
+
         }
 
-        pre {
-            white-space: pre-wrap;
-            white-space: -moz-pre-wrap; 
-            white-space: -pre-wrap;
-            white-space: -o-pre-wrap;
-            word-wrap: break-word;  
+        p code, li code {
+            display: inline;
+            margin: 0 2px;
+            padding: 1px 2px;
+        }
+
+        .example {
+            display: none;
+        }
+
+        .example-live {
+            align-items: center;
+            background: white;
+            /*border: 1px solid #d35;*/
+            border-radius: 5px;
+            box-shadow: 1px 1px 5px #aaa;
+            display: flex;
+            flex-direction: row;
+            font: 200 15px monospace;
+            margin: 15px -20px;
+            padding: 7px 10px;
+        }
+
+        .example-live .editor {
+            color: #aaa;
+            cursor: default;
+            flex: 1 1 auto;
+        }
+
+        .example-live input[type="text"] {
+            border: 0;
+            border-bottom: 1px solid #f35;
+            color: black;
+            font: 400 15px monospace;
+            min-width: 20px;
+            outline: none;
+            padding: 5px 0 5px 4px;
+            resize: horizontal;
+            width: auto;
+        }
+
+        .example-live .result {
+            flex: 0 0 auto;
+            font: 16px "Open Sans", sans-serif;
         }
 
         h1 {
@@ -55,6 +99,14 @@
             clear: both;
             color: #d35;
             font: 26px "Open Sans", Helvetica, Arial, sans-serif;
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        h3 {
+            color: #d35;
+            font: oblique 20px "Open Sans", sans-serif;
+            margin: 25px 0;
             text-align: center;
         }
 
@@ -70,76 +122,275 @@
             width: 90%;
         }
 
-        .red { color: #a00; }
-        .yellow { color: #aa0; }
-        .grey { color: #888; }
+        @media screen and (max-width: 768px) {
+            .example-live {
+                display: block;
+            }
 
-        .example { clear: both; }
-        .example textarea {
-            float: left;
-            height: 100px;
-            width: 50%;
+            .example-live .result {
+                margin-top: 10px;
+            }
         }
-        .example p {
-            float: left;
-            padding: 0px 10px;
-        }
-        .example:after {clear:both;}
     </style>
 
-    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
-    <script src="./evaluatex.js"></script>
+    <script src="dist/evaluatex.min.js"></script>
+    <script src="stretchy.min.js"></script>
     <script type="text/javascript">
-    $(function() {
-        // Insert a target="_blank" into all links to save typing.
-        $("a").attr("target", "_blank");
+        window.onload = function () {
+            // Create example elements
+            const exampleTemplate = document.querySelector(".example-template");
+            for (el of document.querySelectorAll(".example")) {
+                const liveExampleNode = exampleTemplate.cloneNode(true);
+                liveExampleNode.setAttribute("class", "example-live");
 
-        $("textarea").keydown(function(e) {
-            setTimeout(function() { update($(e.currentTarget)); }, 50);
-        });
+                const expressionNode = liveExampleNode.querySelector(".expression");
+                expressionNode.value = el.innerHTML.trim();
+                Stretchy.resize(expressionNode);
 
-        function update(textarea) {
-            try {
-                var r = Evaluatex.evaluate(textarea.val(), {}, { latex: textarea.hasClass("latex") });
-                textarea.siblings(".result").text("Result: " + r);
+                // Put everything on the first line if no constants or options
+                if (!el.hasAttribute("data-constants") && !el.hasAttribute("data-options")) {
+                    removeNode(liveExampleNode.querySelector(".first-break"));
+                }
+
+                // Show/hide the second argument
+                const constantsNode = liveExampleNode.querySelector(".constants");
+                let constants = {};
+                if (el.hasAttribute("data-constants") || el.hasAttribute("data-options")) {
+                    const constantsStr = el.getAttribute("data-constants") || "{}";
+                    constantsNode.innerHTML = constantsStr;
+                    constants = eval("(" + constantsStr + ")");
+                }
+                else {
+                    removeNode(liveExampleNode.querySelector(".constants-container"));
+                }
+
+                // Show/hide the third argument
+                const optionsNode = liveExampleNode.querySelector(".options");
+                let options = {};
+                if (el.hasAttribute("data-options")) {
+                    const optionsStr = el.getAttribute("data-options") || "{}";
+                    optionsNode.innerHTML = optionsStr;
+                    options = eval("(" + optionsStr + ")");
+                }
+                else {
+                    removeNode(liveExampleNode.querySelector(".options-container"));
+                }
+
+                // Show/hide the variables
+                let vars = {};
+                if (el.hasAttribute("data-vars")) {
+                    const varsStr = el.getAttribute("data-vars");
+                    liveExampleNode.querySelector(".vars").innerHTML = varsStr;
+                    vars = eval("(" + varsStr + ")"); // Need to have () around an object for eval to work
+                }
+
+                const resultNode = liveExampleNode.querySelector(".result");
+
+                el.parentNode.replaceChild(liveExampleNode, el);
+
+                // Update handler
+                let timeout = 0;
+                const update = function () {
+                    try {
+                        const expressionStr = JSON.parse("\"" + expressionNode.value.trim() + "\"");
+                        const fn = evaluatex(expressionStr, constants, options);
+                        const result = fn(vars);
+                        resultNode.innerHTML = "Result: " + Math.round(result * 1000) / 1000;
+                    }
+                    catch (e) {
+                        console.error(e);
+                        resultNode.innerHTML = "Error!";
+                    }
+                };
+                update(expressionNode);
+                expressionNode.onkeydown = function (ev) {
+                    // Debounce to prevent recompiling the equation too often
+                    clearTimeout(timeout);
+                    timeout = setTimeout(function () {
+                        update();
+                    }, 300);
+                };
             }
-            catch (x) {
-                textarea.siblings(".result").text("Error! Check your math expression.");
-            }
+
+            // Handle special cases
+            const expressionSpecial = document.querySelector("#expressionSpecial");
+            const resultSpecial = document.querySelector("#resultSpecial");
+            const updateSpecial = function () {
+                try {
+                    const fn = evaluatex(expressionSpecial.value.trim());
+                    const result1 = Math.round(fn({ magic: 2 }) * 1000) / 1000;
+                    const result2 = Math.round(fn({ magic: 99 }) * 1000) / 1000;
+                    resultSpecial.innerHTML = "Result: [" + result1 + ", " + result2 + "]";
+                }
+                catch (e) {
+                    console.error(e);
+                    resultSpecial.innerHTML = "Error!";
+                }
+            };
+            expressionSpecial.onkeydown = function() {
+                setTimeout(updateSpecial, 100);
+            };
+            updateSpecial();
+        };
+
+        function removeNode(node) {
+            node.parentNode.removeChild(node);
         }
-
-        $(".example textarea").each(function(i, e) {
-            update($(e));
-        });
-    });
     </script>
 </head>
 <body>
-    <a href="https://github.com/arthanzel/evaluatex"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+<a href="https://github.com/arthanzel/evaluatex"><img style="position: absolute; top: 0; right: 0; border: 0;"
+                                                      src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67"
+                                                      alt="Fork me on GitHub"
+                                                      data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
 
-    <div class="wrapper">
-        <h1>Evaluatex.js</h1>
-        <h2>Latex and ASCIIMath evaluator for Javascript.</h2>
+<div class="wrapper">
+    <h1>Evaluatex.js</h1>
+    <h2>Latex and ASCIIMath evaluator for Javascript.</h2>
 
-        <p><b>Install with <a href="http://bower.io">Bower</a>:</b></p>
-        <code>$ bower install evaluatex</code>
-        <p>Node package coming soon. Get zipped releases <a href="https://github.com/arthanzel/evaluatex/releases">here</a>. Check it on <a href="https://github.com/arthanzel/evaluatex">Github</a>.</p>
+    <p><b>Install with <a href="http://npmjs.com">NPM</a>:</b></p>
+    <code>$ npm install evaluatex</code>
 
-        <h2>Try it!</h2>
-        <p><b>Evaluatex</b> parses ASCII and LaTeX math quickly and safely. Punch in an expression into a textbox and watch as <b>Evaluatex</b> does the heavy math work so you don't have to! It's especially powerful when combined with math markup tools such as <a href="http://mathquill.com/">Mathquill</a>.</p>
+    <p><b>Use a minified version in a webapp:</b></p>
+    <pre>&lt;script src="node_modules/evaluatex/dist/evaluatex.min.js">&lt;/script>
+&lt;script type="text/javascript">
+    evaluatex();
+&lt;script></pre>
 
-        <p>You can use all of the constants defined in Javascript's Math object, such as sin() and PI.</p>
+    <p><b>Get zipped releases <a href="https://github.com/arthanzel/evaluatex/releases">here</a>.</b></p>
+    <p>Check it on <a href="https://github.com/arthanzel/evaluatex">Github</a>.</p>
 
-        <h2>ASCII Math</h2>
-        <div class="example">
-            <textarea>sqrt(3^2 + 4^2) + log(100) / log(10)</textarea>
-            <p class="result"></p>
-        </div>
+    <h2>Try it!</h2>
+    <p><b>Evaluatex</b> is a parser that reads and evaluates LaTeX and ASCII math. It can safely resolve math
+        expressions, without relying on Javascript's <code>eval</code>, which is evil. It's especially powerful when
+        combined with math markup tools such as <a href="http://mathquill.com/">Mathquill</a>.</p>
 
-        <div class="example"><!-- clear --></div>
+    <h2>API</h2>
+    <pre>const fn = evaluatex(expression, constants = {}, options = {});
+const result = fn(variables = {});</pre>
+    <ul>
+        <li><code>evaluatex()</code> compiles a math expression into a function <code>fn</code>.</li>
+        <li><code>expression</code> is an ASCII or LaTeX expression to be parsed and evaluated.</li>
+        <li>constants is a map of constant values - values that don't change if you invoke <code>fn</code> more than
+            once.
+        </li>
+        <li>options is a map of options for the compiler.</li>
+        <li>result is the numerical result of the calculation.</li>
+        <li>variables is a map of variables that <em>can</em> change between invocations of <code>fn</code>.</li>
+    </ul>
 
-        <h2>Advanced Features</h2>
-        <p>Hit up the <a href="https://github.com/arthanzel/evaluatex/blob/master/README.md">README</a> to see the whole feature-set.</p>
+    <h2>Demo</h2>
+    <p>Change the math below and see the result on the right. You may use any functions and objects in Javascript's
+        <code>Math</code>.</p>
+    <div class="example">
+        sqrt(3^2 + 4^2) + log(PI) / log(SQRT2)
     </div>
+
+    <h2>Manual</h2>
+
+    <!-- Introduction -->
+    <p><b>Evaluatex</b> takes a string containing a math expression and returns a <em>compiled function</em>. The
+        compiled function evaluates the math and returns the result.</p>
+    <div class="example">1 + 2 * 3 / 4</div>
+    <p>A one-liner:</p>
+    <code>const result = evaluatex("1 + 2 * 3 / 4")()</code>
+    <p><b>Evaluatex</b> returns a function because you can invoke it multiple times with different variables.</p>
+    <div class="example-live">
+        <div class="editor">
+            fn = evaluatex("<input id="expressionSpecial" class="expression" type='text' autocomplete='off'
+                                   autocorrect='off'
+                                   autocapitalize='off'
+                                   spellcheck='false' value='1 + magic'/>");
+            <br/>result = [ fn({ magic: 2 }), fn({ magic: 99 }) ];
+        </div>
+        <div class="result" id="resultSpecial"></div>
+    </div>
+
+    <!-- Basics -->
+    <h3>Evaluatex is a calculator</h3>
+    <p>Evaluatex supports all of the features you should expect from a single calculator, including order of operations. You can use parentheses, square brackets, or curly braces interchangeably.
+        Exponents use the <code>^</code> operator.</p>
+    <div class="example">(1 + 2) * [3 ^ 4] - {5 + 6}</div>
+
+    <!-- Named values -->
+    <p>You can use named values in expressions that are visible to the expression only. This avoids the need for <code>eval()</code>.
+        See the
+        <a href="#constants-and-variables">Constants and variables</a> section for more.</p>
+    <div class="example" data-vars="{ a: 3, b: 4 }">1 + a / b</div>
+
+    <!-- Implicit multiplication -->
+    <p>Implicit multiplication with brackets or variables is not a problem.</p>
+    <div class="example" data-vars="{ a: 3, b: 4 }">4a(1 + b)</div>
+
+    <p>Be careful with associativity: <code>1 / 2a</code> is <code>(1 / 2) * a</code>.</p>
+    <div class="example" data-vars="{ a: 3 }">1 / 2a</div>
+
+    <!-- Javascript Math -->
+    <p>You have full access to all functions and constants in Javascript's <code>Math</code> object.</p>
+    <div class="example">sin(PI / 2) + LN2 ^ E + hypot(3, 4)</div>
+
+    <!-- Implicit brackets -->
+    <p>You can omit brackets from simple functions, but be careful with implicit multiplication.</p>
+    <div class="example">sin 2PI</div>
+    <div class="example">sin PI^2</div>
+    <p>When in doubt, use parentheses.</p>
+
+    <!-- Custom functions -->
+    <h3>Functions</h3>
+    <p>You can define custom functions as constants.</p>
+    <div class="example" data-constants="{ incr: function(x) { return x + 1; } }">incr(4)</div>
+    <p>Multi-argument functions work just as well, but they require parentheses.</p>
+    <div class="example">hypot(3, 4)</div>
+    <div class="example">min(5, 4, 3, -2, 1)</div>
+    <div class="example" data-constants="{ sum3: function(a, b, c) { return a + b + c; } }">sum3(10, 20, 30)</div>
+    <p>There are several functions built in to <b>Evaluatex</b> to help with logs, roots, and trigonometry.</p>
+    <div class="example">logn(81, 3)</div>
+    <div class="example">rootn(8, 3)</div>
+    <div class="example">csc(PI/4)</div>
+    <p>Absolute values work like a charm, as do factorials, which round to the nearest integer before performing the calculation.</p>
+    <div class="example">|5 - 20|</div>
+    <div class="example">3.6!</div>
+
+    <!-- Constants and variables -->
+    <h3 id="constants-and-variables">Constants and variables</h3>
+    <p>You can refer to symbols, such as <code>x</code>, in a math expression. These symbols can be <strong>constants</strong> or <strong>variables</strong>.</p>
+    <p><strong>Constants </strong> are specified in the call to <code>evaluatex()</code> as the second parameter. Their values are compiled by <strong>Evaluatex</strong> into the resultant equation. Use constants if you know that they won't change between invocations. Constants may be numeric values or functions, but not expressions like <code>PI/2</code>.</p>
+    <div class="example" data-constants="{ HALF_PI: 1.57 }">100 + HALF_PI</div>
+    <p><strong>Variables</strong> are specified when calling the compiled function. Their values can be changed between invocations. If you compile an expression with a variable, you <em>must</em> give a value for that variable, otherwise <b>Evaluatex</b> will complain. Variables may only be numeric values, and not functions.</p>
+    <div class="example" data-vars="{ x: 50 }">100 + x</div>
+    <p>You can combine constants and variables. Constants have priority over variables - if you define a constant, you can't change it without re-compiling the expression.</p>
+    <div class="example" data-constants="{ HALF_PI: 1.57 }" data-vars="{ x: 50, HALF_PI: 1000 }">100 + x + HALF_PI</div>
+
+    <h3>LaTeX</h3>
+    <p>LaTeX parses math a little differently. Turn on LaTeX behaviour with a flag:</p>
+    <div class="example" data-constants="{ x: 2 }" data-options="{ latex: true }">x^24</div>
+    <p>In the previous example, the power takes only the first symbol after it, so it reads like <code>x^2 * 4</code>. Use curly braces to fix that.</p>
+    <div class="example" data-constants="{ x: 2 }" data-options="{ latex: true }">x^{24}</div>
+    <p>If you try to use parens or square brackets instead, you'll get an error.</p>
+    <div class="example" data-constants="{ x: 2 }" data-options="{ latex: true }">x^(24)</div>
+    <p>LaTeX commands are also supported, like <code>\frac</code>. The following example is interpreted as <code>1 / 20 * 3</code>.</p>
+    <div class="example" data-options="{ latex: true }">\\frac 1{20}3</div>
+
+    <h2>License</h2>
+    <p><b>Evaluatex</b> is licensed under the MIT license. This means that you can probably use it in your project, as long as you don't pass it off as your own or blame the author for the inevitable heat death of the universe.</p>
+</div>
+
+<div style="display: none">
+    <div class="example-template">
+        <div class="editor">
+            fn = evaluatex(<span class="first-break">
+                <br/>&nbsp;&nbsp;</span>"<input class="expression" type='text' autocomplete='off' autocorrect='off'
+                                          autocapitalize='off'
+                                          spellcheck='false' value=''/>"<span class="constants-container">,
+                <br/>&nbsp;
+            <span class="constants"></span></span><span class="options-container">,
+                <br/>&nbsp;
+            <span class="options"></span></span>);
+            <br/>
+            result = fn(<span class="vars"></span>);
+        </div>
+        <div class='result'>Result:</div>
+    </div>
+</div>
 </body>
 </html>
