@@ -5,7 +5,7 @@ Evaluatex
 
 **Evaluatex** can safely resolve math without relying Javascript's native `eval()` function. It can also support custom variables and functions, so you can pass in arbitrary values without having to hard-code the math.
 
-> **Evaluatex** is in development. It is in a functional state, but may do weird and unexpected things such as eating your cat.
+> **Evaluatex** is reasonably stable. It has been tested for common patterns and use cases, but when provoked it may do weird and unexpected things such as eating your cat.
 
 Installation
 -----
