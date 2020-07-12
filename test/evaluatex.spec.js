@@ -162,10 +162,8 @@ describe("Evaluatex", function () {
       try {
         // `b` isn't bound
         test("\\cdot{a}{b}", undefined, { a: 2 }, {}, { latex: true });
-        throw new Error(`should not reach this line`);
       } catch(err) {
         assert.equal(true, err instanceof Error);
-        assert.notEqual('should not reach this line', err.message)
       }
     });
 
@@ -173,10 +171,8 @@ describe("Evaluatex", function () {
       try {
         // `a` is a string
         test("\\cdot{a}{b}", 4, { a: '2', b: 2 }, {}, { latex: true });
-        throw new Error(`should not reach this line`);
       } catch(err) {
         assert.equal(true, err instanceof Error);
-        assert.notEqual('should not reach this line', err.message)
       }
     });
 });
