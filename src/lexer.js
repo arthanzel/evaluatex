@@ -1,6 +1,7 @@
 import Token from "./Token";
 import arities from "./util/arities";
 import localFunctions from "./util/localFunctions";
+import replaceToken from './util/replaceToken';
 
 // Single-arg tokens are those that, when in LaTeX mode, read only one character as their argument OR a block delimited by { }. For example, `x ^ 24` would be read as `SYMBOL(x) POWER NUMBER(2) NUMBER(4).
 const CHAR_ARG_TOKENS = [Token.TYPE_POWER, Token.TYPE_COMMAND];
@@ -47,7 +48,7 @@ class Lexer {
     lexExpression(charMode = false) {
         while (this.hasNext()) {
             let token = charMode ? this.nextCharToken() : this.next();
-            this.tokens.push(token);
+            this.tokens.push(replaceToken(token));
 
             if (this.opts.latex && isCharArgToken(token)) {
                 let arity = 1;

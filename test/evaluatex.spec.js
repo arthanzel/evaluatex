@@ -136,6 +136,17 @@ describe("Evaluatex", function () {
         test("\\frac {4 ^ 2} 32", 32 / 3, {}, {}, { latex: true });
     });
 
+    it("support LaTeX times and cdot", function () {
+      const xAry = new Array(10).fill(0).map((_, i) => i + 1)
+      const yAry = new Array(10).fill(0).map((_, i) => i + 1)
+      for (let x = 0; x < xAry.length; x++) {
+        for (let y = 0; y < yAry.length; y++) {
+          test(`${x}\\times${y}`, x * y, {}, {}, { latex: true });
+          test(`${x}\\cdot${y}`, x * y, {}, {}, { latex: true });
+        }
+      }
+  });
+
     it("supports LaTeX typesetting", function () {
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1 / 6, { x: 9 }, {}, { latex: true });
         test("\\frac 1{20}3", 3/20, {}, {}, { latex: true });
@@ -143,5 +154,25 @@ describe("Evaluatex", function () {
 
        const  fn = evaluatex("\\frac 1{20}3", {}, { latex: true });
         fn;
+    });
+
+    it("throws error with unset LaTeX symbol", function () {
+      try {
+        // `b` isn't bound
+        test("{a}\\cdot{b}", undefined, { a: 2 }, {}, { latex: true });
+      } catch(err) {
+        assert.instanceOf(err, Error);
+        assert.include(err.message, "Symbol b is undefined or not a number");
+      }
+    });
+
+    it("throws error with invalid LaTeX symbol", function () {
+      try {
+        // `a` is a string
+        test("{a}\\cdot{b}", 4, { a: '2', b: 2 }, {}, { latex: true });
+      } catch(err) {
+        assert.instanceOf(err, Error);
+        assert.include(err.message, "Symbol a is undefined or not a number");
+      }
     });
 });
