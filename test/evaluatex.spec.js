@@ -136,6 +136,19 @@ describe("Evaluatex", function () {
         test("\\frac {4 ^ 2} 32", 32 / 3, {}, {}, { latex: true });
     });
 
+    it("support LaTeX cdot and times", function () {
+      const xAry = new Array(10).fill(0).map((_, i) => i + 1)
+      const yAry = new Array(10).fill(0).map((_, i) => i + 1)
+      for (let x = 0; x < xAry.length; x++) {
+        for (let y = 0; y < yAry.length; y++) {
+          test(`\\cdot ${x} ${y}`, x * y, {}, {}, { latex: true });
+          test(`\\times ${x} ${y}`, x * y, {}, {}, { latex: true });
+          test(`\\cdot{${x}}{${y}}`, x * y, {}, {}, { latex: true });
+          test(`\\times{${x}}{${y}}`, x * y, {}, {}, { latex: true });
+        }
+      }
+  });
+
     it("supports LaTeX typesetting", function () {
         test("\\frac{1}{2}x^{-\\frac{1}{2}}", 1 / 6, { x: 9 }, {}, { latex: true });
         test("\\frac 1{20}3", 3/20, {}, {}, { latex: true });
