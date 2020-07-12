@@ -65,7 +65,7 @@ export default class Node {
                 if (isFinite(vars[this.value])) {
                     return vars[this.value];
                 }
-                throw "Symbol " + this.value + " is undefined or not a number";
+                throw new Error("Symbol " + this.value + " is undefined or not a number");
         }
 
         return result;
