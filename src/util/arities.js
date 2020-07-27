@@ -4,8 +4,6 @@
  * List of arities for LaTeX commands. Arguments for LaTeX commands aren't delimited by parens, so the compiler needs to know how many arguments to expect for each function.
  */
 export default {
-    "cdot": 2,
-    "times": 2,
     "frac": 2,
     "sqrt": 1,
     "sin": 1,

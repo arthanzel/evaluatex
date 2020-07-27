@@ -136,15 +136,13 @@ describe("Evaluatex", function () {
         test("\\frac {4 ^ 2} 32", 32 / 3, {}, {}, { latex: true });
     });
 
-    it("support LaTeX cdot and times", function () {
+    it("support LaTeX times and cdot", function () {
       const xAry = new Array(10).fill(0).map((_, i) => i + 1)
       const yAry = new Array(10).fill(0).map((_, i) => i + 1)
       for (let x = 0; x < xAry.length; x++) {
         for (let y = 0; y < yAry.length; y++) {
-          test(`\\cdot ${x} ${y}`, x * y, {}, {}, { latex: true });
-          test(`\\times ${x} ${y}`, x * y, {}, {}, { latex: true });
-          test(`\\cdot{${x}}{${y}}`, x * y, {}, {}, { latex: true });
-          test(`\\times{${x}}{${y}}`, x * y, {}, {}, { latex: true });
+          test(`${x}\\times${y}`, x * y, {}, {}, { latex: true });
+          test(`${x}\\cdot${y}`, x * y, {}, {}, { latex: true });
         }
       }
   });
@@ -161,7 +159,7 @@ describe("Evaluatex", function () {
     it("throws error with unset LaTeX symbol", function () {
       try {
         // `b` isn't bound
-        test("\\cdot{a}{b}", undefined, { a: 2 }, {}, { latex: true });
+        test("{a}\\cdot{b}", undefined, { a: 2 }, {}, { latex: true });
       } catch(err) {
         assert.equal(true, err instanceof Error);
       }
@@ -170,7 +168,7 @@ describe("Evaluatex", function () {
     it("throws error with invalid LaTeX symbol", function () {
       try {
         // `a` is a string
-        test("\\cdot{a}{b}", 4, { a: '2', b: 2 }, {}, { latex: true });
+        test("{a}\\cdot{b}", 4, { a: '2', b: 2 }, {}, { latex: true });
       } catch(err) {
         assert.equal(true, err instanceof Error);
       }

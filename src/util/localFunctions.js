@@ -2,14 +2,6 @@
 Javascript's Math API omits some important mathematical functions. These are included here.
  */
 
-export const cdot = function fact(a, b) {
-  return a * b;
-}
-
-export const times = function times(a, b) {
-  return cdot(a, b)
-}
-
 export const fact = function fact(a) {
     a = Math.round(a);
     let result = 1;
@@ -48,7 +40,7 @@ export const cot = function cot(x) {
     return 1 / Math.tan(x);
 };
 
-const locals = { cdot, times, fact, frac, logn, rootn, sec, csc, cot };
+const locals = { fact, frac, logn, rootn, sec, csc, cot };
 
 // Copy things from Math. Can't use Object.assign since Math has non-enumerable properties.
 for (const k of Object.getOwnPropertyNames(Math)) {

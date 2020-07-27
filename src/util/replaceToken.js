@@ -21,5 +21,8 @@ export default function replaceToken(token) {
     // else if (token.type === Token.TYPE_COMMAND && token.value === "\\right]") {
     //     return new Token(Token.TYPE_RPAREN, "]");
     // }
+    if (token.type === Token.TYPE_COMMAND && ["\\cdot", "\\times"].includes(token.value)) {
+        return new Token(Token.TYPE_TIMES, "*");
+    }
     return token;
 };
