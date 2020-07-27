@@ -9,7 +9,7 @@
     "private": false,
     "scripts": {
         "build": "babel -d dist src && webpack dist/minifier.js -o dist/evaluatex.min.js",
-	"postinstall": "npm run build",
+        "postinstall": "npm run build",
         "test": "mocha --require babel-register"
     },
     "files": [
