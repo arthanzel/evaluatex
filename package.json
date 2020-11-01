@@ -8,7 +8,7 @@
     "license": "MIT",
     "private": false,
     "scripts": {
-        "build": "babel -d dist src && webpack",
+        "build": "babel -d dist src && webpack && cp dist/evaluatex.min.js evaluatex.docs.js",
         "test": "mocha --require babel-register"
     },
     "files": [
