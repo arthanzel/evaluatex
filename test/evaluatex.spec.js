@@ -126,7 +126,7 @@ describe("Evaluatex", function () {
         test("{1 + \\left[2 - \\left(3 + 4\\right)\\right]}", -4);
     });
 
-    it("support LaTeX's stupid one-number expressions", function () {
+    it("supports LaTeX's stupid one-number expressions", function () {
         test("2^24", 16, {}, {}, { latex: true });
         test("2^{12}", 4096, {}, {}, { latex: true });
         test("\\frac 4 2", 2, {}, {}, { latex: true });
@@ -136,7 +136,7 @@ describe("Evaluatex", function () {
         test("\\frac {4 ^ 2} 32", 32 / 3, {}, {}, { latex: true });
     });
 
-    it("support LaTeX times and cdot", function () {
+    it("supports LaTeX times and cdot", function () {
       const xAry = new Array(10).fill(0).map((_, i) => i + 1)
       const yAry = new Array(10).fill(0).map((_, i) => i + 1)
       for (let x = 0; x < xAry.length; x++) {
